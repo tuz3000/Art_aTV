@@ -38,7 +38,6 @@ body{
   text-decoration:none;
 }
 
-/* поддержка */
 .support{
   position:fixed;
   right:12px;
@@ -57,13 +56,11 @@ body{
   font-weight:600;
 }
 
-/* счётчик */
 .counter{
   padding:10px 16px;
   color:#aaa;
 }
 
-/* поиск */
 input{
   width:92%;
   margin:10px 4%;
@@ -74,7 +71,6 @@ input{
   color:white;
 }
 
-/* секции */
 .section{
   padding:10px 12px;
   color:#3aa0ff;
@@ -82,7 +78,6 @@ input{
   cursor:pointer;
 }
 
-/* список */
 .list{
   display:flex;
   flex-direction:column;
@@ -90,7 +85,6 @@ input{
   padding:10px;
 }
 
-/* карточка */
 .item{
   display:flex;
   align-items:center;
@@ -98,6 +92,13 @@ input{
   background:#15151c;
   padding:12px;
   border-radius:14px;
+  scroll-margin-top:100px;
+  transition:0.3s;
+}
+
+.item.highlight{
+  outline:2px solid #3aa0ff;
+  transform:scale(1.02);
 }
 
 .poster{
@@ -127,12 +128,10 @@ input{
 
 <body>
 
-<!-- ⚙️ ТЕХПОДДЕРЖКА -->
 <div class="support">
   <a href="https://t.me/Art_aTV_support_bot">⚙️ Техподдержка</a>
 </div>
 
-<!-- шапка -->
 <div class="header">
   <div class="brand">
     Каталог сериалов <a href="https://t.me/Art_aTV">@Art_aTV</a>
@@ -143,7 +142,6 @@ input{
 
 <input id="search" placeholder="Поиск сериалов...">
 
-<!-- 🔥 ПОПУЛЯРНОЕ (РАСКРЫВАЮЩЕЕСЯ) -->
 <div class="section" onclick="togglePopular()">
 🔥 Популярное ⬇️
 </div>
@@ -152,15 +150,11 @@ input{
   <div class="list" id="popular"></div>
 </div>
 
-<div class="section">
-🎬 Все сериалы
-</div>
-
+<div class="section">🎬 Все сериалы</div>
 <div class="list" id="list"></div>
 
 <script>
 
-// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
@@ -173,9 +167,13 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🔥 КЛИКИ (1 сериал = 1 документ)
-function trackClick(title){
+// нормализация ID
+function makeId(title){
+  return "item-" + title.trim().toLowerCase().replace(/\s+/g,"-");
+}
 
+// клики
+function trackClick(title){
   const key = title.trim().toLowerCase();
 
   db.collection("clicks").doc(key).set({
@@ -183,10 +181,9 @@ function trackClick(title){
     count: firebase.firestore.FieldValue.increment(1),
     time: Date.now()
   }, { merge:true });
-
 }
 
-// 📥 SHEET
+// SHEET
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
@@ -216,14 +213,17 @@ fetch(SHEET)
   loadPopular();
 });
 
-// 🎬 ВСЕ СЕРИАЛЫ
+// ВСЕ СЕРИАЛЫ
 function render(list){
   const box=document.getElementById("list");
   box.innerHTML="";
 
   list.forEach(i=>{
+
+    const id = makeId(i.title);
+
     box.innerHTML+=`
-    <div class="item">
+    <div class="item" id="${id}">
 
       <img class="poster"
         src="${i.poster}"
@@ -242,7 +242,7 @@ function render(list){
   });
 }
 
-// 🔥 ПОПУЛЯРНОЕ (ТОП 5)
+// ПОПУЛЯРНОЕ
 function loadPopular(){
 
   db.collection("clicks")
@@ -256,41 +256,65 @@ function loadPopular(){
     });
 
     arr.sort((a,b)=>(b.count||0)-(a.count||0));
-
     arr = arr.slice(0,5);
 
     renderPopular(arr);
   });
 }
 
-// 🔥 ОТРИСОВКА
+// ПОПУЛЯРНОЕ (КЛИКАБЕЛЬНОЕ)
 function renderPopular(list){
   const box=document.getElementById("popular");
   box.innerHTML="";
 
   list.forEach(i=>{
+
+    const id = makeId(i.title);
+
     box.innerHTML+=`
-    <div class="item">
+    <div class="item"
+      style="cursor:pointer"
+      onclick="scrollToItem('${id}')">
+
       <div class="title">${i.title}</div>
+
       <div style="color:#3aa0ff;font-weight:700">
         🔥 ${i.count||0}
       </div>
+
     </div>`;
   });
 }
 
-// 🔽 раскрытие / закрытие
+// СКРОЛЛ + ПОДСВЕТКА
+function scrollToItem(id){
+
+  const el = document.getElementById(id);
+
+  if(!el) return;
+
+  el.scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+
+  el.classList.add("highlight");
+
+  setTimeout(()=>{
+    el.classList.remove("highlight");
+  },1500);
+}
+
+// раскрытие
 let openPopular=false;
 
 function togglePopular(){
   openPopular=!openPopular;
-
-  const box=document.getElementById("popularWrap");
-
-  box.style.display = openPopular ? "block" : "none";
+  document.getElementById("popularWrap").style.display =
+  openPopular ? "block" : "none";
 }
 
-// 🔍 поиск
+// поиск
 document.getElementById("search").addEventListener("input",e=>{
   const q=e.target.value.toLowerCase();
 
