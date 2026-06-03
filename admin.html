@@ -1,49 +1,173 @@
 <!DOCTYPE html>
+
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Art_aTV Admin</title>
+<title>Art_aTV Analytics PRO</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
+
 body{
   margin:0;
-  font-family:Arial;
   background:#0b0b0f;
   color:white;
+  font-family:Arial,sans-serif;
+}
+
+.header{
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:#111;
+  padding:18px;
+  font-size:24px;
+  font-weight:800;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:10px;
+  padding:10px;
 }
 
 .card{
-  margin:12px;
-  padding:14px;
   background:#15151c;
-  border-radius:12px;
+  border-radius:14px;
+  padding:16px;
 }
 
 .big{
-  font-size:22px;
+  font-size:30px;
   font-weight:800;
   color:#3aa0ff;
 }
 
-.top{
-  margin:6px 0;
+.label{
+  margin-top:6px;
+  color:#aaa;
 }
-</style>
-</head>
 
+.search{
+  width:calc(100% - 20px);
+  margin:10px;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:#1a1a1a;
+  color:white;
+  font-size:15px;
+}
+
+.section{
+  margin:10px;
+  background:#15151c;
+  border-radius:14px;
+  padding:16px;
+}
+
+.section h2{
+  margin-top:0;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid #222;
+}
+
+.row:last-child{
+  border-bottom:none;
+}
+
+.rank{
+  width:45px;
+  color:#3aa0ff;
+  font-weight:700;
+}
+
+.title{
+  flex:1;
+  margin:0 10px;
+}
+
+.count{
+  font-weight:700;
+}
+
+.percent{
+  color:#aaa;
+  margin-left:8px;
+}
+
+canvas{
+  max-height:500px;
+}
+
+.lasttime{
+  color:#888;
+  font-size:12px;
+  margin-top:3px;
+}
+
+</style>
+
+</head>
 <body>
 
+<div class="header">
+📊 Art_aTV Analytics PRO
+</div>
+
+<div class="grid">
+
 <div class="card">
-  <div class="big" id="clicks">0</div>
-  🔥 Total clicks
+<div class="big" id="totalClicks">0</div>
+<div class="label">🔥 Всего кликов</div>
 </div>
 
 <div class="card">
-  <div class="big">TOP 5</div>
-  <div id="top"></div>
+<div class="big" id="totalShows">0</div>
+<div class="label">🎬 Сериалов с кликами</div>
+</div>
+
+<div class="card">
+<div class="big" id="avgClicks">0</div>
+<div class="label">📈 Среднее на сериал</div>
+</div>
+
+<div class="card">
+<div class="big" id="leader">—</div>
+<div class="label">🏆 Лидер</div>
+</div>
+
+</div>
+
+<div class="section">
+<h2>📊 ТОП-20 сериалов</h2>
+<canvas id="chart"></canvas>
+</div>
+
+<input
+class="search"
+id="search"
+placeholder="Поиск сериала..."
+
+>
+
+<div class="section">
+<h2>🔥 Полный рейтинг</h2>
+<div id="list"></div>
 </div>
 
 <script>
@@ -55,26 +179,179 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+
 const db = firebase.firestore();
 
-db.collection("clicks").onSnapshot(snap=>{
+let chart;
+let allData=[];
+
+function medal(index){
+
+  if(index===0) return "🥇";
+  if(index===1) return "🥈";
+  if(index===2) return "🥉";
+
+  return "#" + (index+1);
+}
+
+function render(data){
 
   let total=0;
-  let arr=[];
 
-  snap.forEach(d=>{
-    total+=d.data().count||0;
-    arr.push(d.data());
+  data.forEach(i=>{
+    total += i.count || 0;
   });
 
-  document.getElementById("clicks").innerText=total;
+  document.getElementById("totalClicks").innerText = total;
+  document.getElementById("totalShows").innerText = data.length;
 
-  arr.sort((a,b)=>(b.count||0)-(a.count||0));
+  const avg =
+    data.length
+    ? (total/data.length).toFixed(1)
+    : 0;
 
-  document.getElementById("top").innerHTML =
-    arr.slice(0,5).map((i,index)=>
-      `${index+1}. ${i.title} (${i.count})`
-    ).join("<br>");
+  document.getElementById("avgClicks").innerText = avg;
+
+  document.getElementById("leader").innerText =
+    data.length
+    ? data[0].count
+    : 0;
+
+  const list=document.getElementById("list");
+
+  const q=
+    document.getElementById("search")
+    .value
+    .toLowerCase();
+
+  const filtered=data.filter(item=>
+    item.title.toLowerCase().includes(q)
+  );
+
+  list.innerHTML=filtered.map((item,index)=>{
+
+    const percent =
+      total
+      ? ((item.count/total)*100).toFixed(1)
+      : 0;
+
+    const date =
+      item.time
+      ? new Date(item.time).toLocaleString("ru-RU")
+      : "нет данных";
+
+    return `
+    <div class="row">
+
+      <div class="rank">
+        ${medal(index)}
+      </div>
+
+      <div class="title">
+        ${item.title}
+        <div class="lasttime">
+          Последний клик: ${date}
+        </div>
+      </div>
+
+      <div class="count">
+        ${item.count}
+        <span class="percent">
+          ${percent}%
+        </span>
+      </div>
+
+    </div>
+    `;
+
+  }).join("");
+
+  drawChart(data);
+}
+
+function drawChart(data){
+
+  const top=data.slice(0,20);
+
+  const labels=
+    top.map(i=>i.title);
+
+  const values=
+    top.map(i=>i.count);
+
+  if(chart){
+    chart.destroy();
+  }
+
+  chart=new Chart(
+    document.getElementById("chart"),
+    {
+      type:"bar",
+      data:{
+        labels,
+        datasets:[{
+          label:"Клики",
+          data:values
+        }]
+      },
+      options:{
+        responsive:true,
+        plugins:{
+          legend:{
+            labels:{
+              color:"white"
+            }
+          }
+        },
+        scales:{
+          x:{
+            ticks:{
+              color:"white"
+            }
+          },
+          y:{
+            ticks:{
+              color:"white"
+            }
+          }
+        }
+      }
+    }
+  );
+}
+
+db.collection("clicks")
+.onSnapshot(snapshot=>{
+
+  let arr=[];
+
+  snapshot.forEach(doc=>{
+
+    const d=doc.data();
+
+    arr.push({
+      title:d.title || "Без названия",
+      count:d.count || 0,
+      time:d.time || 0
+    });
+
+  });
+
+  arr.sort((a,b)=>
+    (b.count||0)-(a.count||0)
+  );
+
+  allData=arr;
+
+  render(allData);
+
+});
+
+document
+.getElementById("search")
+.addEventListener("input",()=>{
+
+  render(allData);
 
 });
 
