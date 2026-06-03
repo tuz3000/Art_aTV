@@ -2,12 +2,11 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Analytics PRO 2.0 - Art_aTV</title>
+<title>Analytics PRO MAX — Art_aTV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -19,15 +18,15 @@ body{
 }
 
 .header{
-  padding:14px;
-  background:#111;
+  padding:16px;
   font-size:18px;
-  font-weight:800;
+  font-weight:900;
+  background:#111;
 }
 
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:12px;
   padding:12px;
 }
@@ -39,32 +38,20 @@ body{
 }
 
 .big{
-  font-size:26px;
+  font-size:28px;
   font-weight:900;
   color:#3aa0ff;
 }
 
 .small{
-  color:#aaa;
   font-size:12px;
+  color:#aaa;
 }
 
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:10px;
-}
-
-td,th{
-  padding:8px;
-  border-bottom:1px solid #222;
-  font-size:13px;
-}
-
-input{
+input,select{
   width:95%;
   padding:10px;
-  margin:10px;
+  margin:8px 0;
   border-radius:10px;
   border:none;
   background:#1a1a1a;
@@ -81,17 +68,23 @@ button{
   cursor:pointer;
 }
 
-.row{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+
+td,th{
+  padding:8px;
+  border-bottom:1px solid #222;
+  font-size:13px;
 }
 
 .badge{
-  background:#222;
-  padding:4px 8px;
+  padding:3px 8px;
   border-radius:8px;
-  font-size:12px;
+  background:#222;
+  font-size:11px;
   color:#aaa;
 }
 </style>
@@ -99,7 +92,7 @@ button{
 
 <body>
 
-<div class="header">📊 Analytics PRO 2.0 — Art_aTV (YouTube Studio Mode)</div>
+<div class="header">🚀 Analytics PRO MAX — YouTube Studio + Netflix AI</div>
 
 <div class="grid">
 
@@ -109,18 +102,18 @@ button{
   </div>
 
   <div class="card">
-    <div class="big" id="uniqueSeries">0</div>
-    <div class="small">🎬 Unique series</div>
+    <div class="big" id="totalSeries">0</div>
+    <div class="small">🎬 Total series</div>
   </div>
 
   <div class="card">
-    <div class="big" id="todayClicks">0</div>
-    <div class="small">📅 Today clicks</div>
-  </div>
-
-  <div class="card">
-    <div class="big" id="topName">-</div>
+    <div class="big" id="topSeries">-</div>
     <div class="small">🏆 Top series</div>
+  </div>
+
+  <div class="card">
+    <div class="big" id="avgClicks">0</div>
+    <div class="small">📊 Avg per series</div>
   </div>
 
 </div>
@@ -128,21 +121,28 @@ button{
 <div class="grid">
 
   <div class="card">
-    <h3>📈 Clicks Chart (Realtime)</h3>
+    <h3>📈 Realtime chart</h3>
     <canvas id="chart"></canvas>
   </div>
 
   <div class="card">
     <h3>🧠 AI Insights</h3>
-    <div id="insights" class="small"></div>
+    <div id="ai"></div>
   </div>
 
 </div>
 
 <div class="card" style="margin:12px">
-  <h3>🔥 All Series Analytics</h3>
+
+  <h3>🔎 Filters</h3>
 
   <input id="search" placeholder="Search series...">
+
+  <select id="sort">
+    <option value="desc">Most popular</option>
+    <option value="asc">Least popular</option>
+    <option value="alpha">Alphabet</option>
+  </select>
 
   <button onclick="exportCSV()">📥 Export CSV</button>
 
@@ -156,11 +156,11 @@ button{
     </thead>
     <tbody id="table"></tbody>
   </table>
+
 </div>
 
 <script>
 
-// ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
@@ -173,67 +173,80 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ================= DATA =================
-let allClicks = [];
 let chart;
+let dataMap = {};
+let raw = [];
 
 // ================= LIVE =================
 db.collection("clicks").onSnapshot(snap => {
 
-  allClicks = [];
+  dataMap = {};
+  raw = [];
+
   let total = 0;
-  let map = {};
 
   snap.forEach(d => {
-    const data = d.data();
-    const count = data.count || 0;
+    let v = d.data();
+    let c = v.count || 0;
 
-    total += count;
-    map[data.title] = count;
+    dataMap[v.title] = c;
+    total += c;
 
-    allClicks.push({
-      title: data.title,
-      count: count,
-      time: data.time || 0
+    raw.push({
+      title:v.title,
+      count:c,
+      time:v.time || 0
     });
   });
 
-  updateUI(total, map);
-  renderTable(map);
-  renderChart(map);
-  analyze(map);
+  render(total);
 });
 
-// ================= UI =================
-function updateUI(total, map){
+// ================= MAIN =================
+function render(total){
+
+  let entries = Object.entries(dataMap);
+
+  // top
+  entries.sort((a,b)=>b[1]-a[1]);
+  let top = entries[0];
 
   document.getElementById("totalClicks").innerText = total;
+  document.getElementById("totalSeries").innerText = entries.length;
+  document.getElementById("topSeries").innerText = top ? top[0] : "-";
 
-  const entries = Object.entries(map);
-  document.getElementById("uniqueSeries").innerText = entries.length;
+  let avg = (total / (entries.length || 1)).toFixed(1);
+  document.getElementById("avgClicks").innerText = avg;
 
-  const top = entries.sort((a,b)=>b[1]-a[1])[0];
-  document.getElementById("topName").innerText = top ? top[0] : "-";
-
-  // today clicks
-  const today = Date.now() - 86400000;
-  let todayCount = allClicks.filter(i => i.time > today).length;
-  document.getElementById("todayClicks").innerText = todayCount;
+  renderTable(entries);
+  renderChart(entries);
+  renderAI(entries);
 }
 
 // ================= TABLE =================
-function renderTable(map){
+function renderTable(entries){
 
-  let rows = Object.entries(map)
-    .sort((a,b)=>b[1]-a[1]);
+  let sort = document.getElementById("sort").value;
 
-  const tbody = document.getElementById("table");
+  if(sort === "desc") entries.sort((a,b)=>b[1]-a[1]);
+  if(sort === "asc") entries.sort((a,b)=>a[1]-b[1]);
+  if(sort === "alpha") entries.sort((a,b)=>a[0].localeCompare(b[0]));
+
+  const q = document.getElementById("search").value.toLowerCase();
+
+  let filtered = entries.filter(e =>
+    e[0].toLowerCase().includes(q)
+  );
+
+  let tbody = document.getElementById("table");
   tbody.innerHTML = "";
 
-  rows.forEach(([title,count]) => {
+  filtered.forEach(([title,count]) => {
 
-    let trend = count > 50 ? "🔥 hot" :
-                count > 10 ? "📈 growing" : "⚪ low";
+    let trend =
+      count > 50 ? "🔥 hot" :
+      count > 10 ? "📈 mid" :
+      "⚪ low";
 
     tbody.innerHTML += `
       <tr>
@@ -246,10 +259,10 @@ function renderTable(map){
 }
 
 // ================= CHART =================
-function renderChart(map){
+function renderChart(entries){
 
-  const labels = Object.keys(map);
-  const data = Object.values(map);
+  let labels = entries.map(e=>e[0]);
+  let data = entries.map(e=>e[1]);
 
   if(chart) chart.destroy();
 
@@ -258,7 +271,6 @@ function renderChart(map){
     data:{
       labels,
       datasets:[{
-        label:"Clicks",
         data,
         backgroundColor:"#3aa0ff"
       }]
@@ -270,55 +282,47 @@ function renderChart(map){
   });
 }
 
-// ================= AI INSIGHTS =================
-function analyze(map){
+// ================= AI =================
+function renderAI(entries){
 
-  let entries = Object.entries(map);
-  entries.sort((a,b)=>b[1]-a[1]);
+  if(entries.length === 0) return;
 
-  let top = entries[0];
-  let avg = (entries.reduce((a,b)=>a+b[1],0) / entries.length).toFixed(1);
+  let sorted = [...entries].sort((a,b)=>b[1]-a[1]);
 
-  document.getElementById("insights").innerHTML = `
-    🧠 Most popular: <b>${top ? top[0] : "-"}</b><br><br>
-    📊 Average clicks per series: <b>${avg}</b><br><br>
-    ⚡ Total series: <b>${entries.length}</b><br><br>
-    📈 Recommendation: promote top 3 series for max conversion
+  let top = sorted[0];
+  let worst = sorted[sorted.length-1];
+
+  let avg = (sorted.reduce((a,b)=>a+b[1],0)/sorted.length).toFixed(1);
+
+  document.getElementById("ai").innerHTML = `
+    🧠 Top performer: <b>${top[0]}</b><br><br>
+    📉 Weak content: <b>${worst[0]}</b><br><br>
+    📊 Average engagement: <b>${avg}</b><br><br>
+    ⚡ Recommendation:<br>
+    Promote top 3 series + improve thumbnails for low ones
   `;
 }
-
-// ================= SEARCH =================
-document.getElementById("search").addEventListener("input", e => {
-
-  let q = e.target.value.toLowerCase();
-
-  let filtered = allClicks.filter(i =>
-    i.title.toLowerCase().includes(q)
-  );
-
-  let map = {};
-  filtered.forEach(i => map[i.title] = i.count);
-
-  renderTable(map);
-  renderChart(map);
-});
 
 // ================= EXPORT =================
 function exportCSV(){
 
   let csv = "title,clicks\n";
 
-  allClicks.forEach(i=>{
-    csv += `${i.title},${i.count}\n`;
+  Object.entries(dataMap).forEach(([t,c])=>{
+    csv += `${t},${c}\n`;
   });
 
   let blob = new Blob([csv], {type:"text/csv"});
   let a = document.createElement("a");
 
   a.href = URL.createObjectURL(blob);
-  a.download = "analytics.csv";
+  a.download = "PRO_MAX_analytics.csv";
   a.click();
 }
+
+// ================= EVENTS =================
+document.getElementById("search").addEventListener("input",()=>render(0));
+document.getElementById("sort").addEventListener("change",()=>render(0));
 
 </script>
 
