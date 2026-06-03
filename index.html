@@ -125,26 +125,49 @@ input{
 }
 
 /* ===== СТРЕЛКА НАВЕРХ ===== */
-#scrollTopBtn {
-  position: fixed;
-  bottom:20px;
-  right:20px;
-  z-index:999;
-  background: rgba(58,160,255,0.2);
+#scrollTopBtn{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  width:54px;
+  height:54px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
   border:none;
   border-radius:50%;
-  width:45px;
-  height:45px;
-  font-size:22px;
-  color:#3aa0ff;
+
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+
+  box-shadow:
+    0 4px 18px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+
+  color:#ffffff;
+  font-size:24px;
   cursor:pointer;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  transition:0.3s;
+  z-index:9999;
+
+  transition:
+    transform .2s ease,
+    background .2s ease,
+    box-shadow .2s ease;
 }
+
 #scrollTopBtn:hover{
-  background: rgba(58,160,255,0.4);
+  transform:translateY(-3px);
+  background:rgba(255,255,255,0.14);
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+#scrollTopBtn:active{
+  transform:translateY(0);
 }
 </style>
 </head>
