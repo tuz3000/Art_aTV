@@ -123,18 +123,41 @@ input{
   font-weight:600;
   text-decoration:none;
 }
+
+/* ===== СТРЕЛКА НАВЕРХ ===== */
+#scrollTopBtn {
+  position: fixed;
+  bottom:20px;
+  right:20px;
+  z-index:999;
+  background: rgba(58,160,255,0.2);
+  border:none;
+  border-radius:50%;
+  width:45px;
+  height:45px;
+  font-size:22px;
+  color:#3aa0ff;
+  cursor:pointer;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  transition:0.3s;
+}
+#scrollTopBtn:hover{
+  background: rgba(58,160,255,0.4);
+}
 </style>
 </head>
 
 <body>
 
 <div class="support">
-  <a href="https://t.me/Art_aTV_support_bot">⚙️ Техподдержка</a>
+  <a href="https://t.me/Art_aTV_support_bot">⚙️ Поддержка</a>
 </div>
 
 <div class="header">
   <div class="brand">
-    Каталог <a href="https://t.me/Art_aTV">@Art_aTV</a>
+    <a href="https://t.me/Art_aTV">@Art_aTV</a>
   </div>
 </div>
 
@@ -152,6 +175,9 @@ input{
 
 <div class="section">🎬 Все сериалы</div>
 <div class="list" id="list"></div>
+
+<!-- КНОПКА НАВЕРХ -->
+<button id="scrollTopBtn" onclick="scrollToTop()">⬆</button>
 
 <script>
 
@@ -246,9 +272,7 @@ function render(list){
 function loadPopular(){
 
   db.collection("clicks")
-  .get()
-  .then(snap=>{
-
+  .onSnapshot(snap=>{ // 🔥 live
     let arr=[];
 
     snap.forEach(doc=>{
@@ -322,6 +346,11 @@ document.getElementById("search").addEventListener("input",e=>{
     i.title.toLowerCase().includes(q)
   ));
 });
+
+// ===== ФУНКЦИЯ СТРЕЛКИ НАВЕРХ =====
+function scrollToTop(){
+  window.scrollTo({top:0, behavior:"smooth"});
+}
 
 </script>
 
