@@ -3,7 +3,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Art_aTV Analytics PRO</title>
+<title>Analytics PRO 2.0 MAX</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -14,160 +14,145 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-
 body{
   margin:0;
   background:#0b0b0f;
   color:white;
-  font-family:Arial,sans-serif;
+  font-family:Arial;
 }
 
 .header{
+  padding:16px;
+  font-size:20px;
+  font-weight:800;
+  background:#111;
   position:sticky;
   top:0;
-  z-index:100;
-  background:#111;
-  padding:18px;
-  font-size:24px;
-  font-weight:800;
+  z-index:10;
 }
 
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
   gap:10px;
   padding:10px;
 }
 
 .card{
   background:#15151c;
-  border-radius:14px;
-  padding:16px;
+  border-radius:12px;
+  padding:14px;
 }
 
 .big{
-  font-size:30px;
+  font-size:26px;
   font-weight:800;
   color:#3aa0ff;
-}
-
-.label{
-  margin-top:6px;
-  color:#aaa;
 }
 
 .search{
   width:calc(100% - 20px);
   margin:10px;
-  padding:14px;
+  padding:12px;
+  border-radius:10px;
   border:none;
-  border-radius:12px;
   background:#1a1a1a;
   color:white;
-  font-size:15px;
+}
+
+.controls{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:10px;
+}
+
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  background:#222;
+  color:white;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#3aa0ff;
 }
 
 .section{
-  margin:10px;
-  background:#15151c;
-  border-radius:14px;
-  padding:16px;
+  padding:10px;
 }
 
-.section h2{
-  margin-top:0;
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
 }
 
-.row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 0;
+th,td{
+  padding:10px;
   border-bottom:1px solid #222;
-}
-
-.row:last-child{
-  border-bottom:none;
+  text-align:left;
 }
 
 .rank{
-  width:45px;
   color:#3aa0ff;
   font-weight:700;
 }
 
-.title{
-  flex:1;
-  margin:0 10px;
+.badge{
+  font-size:12px;
 }
 
-.count{
-  font-weight:700;
-}
-
-.percent{
-  color:#aaa;
-  margin-left:8px;
-}
+.green{color:#4ade80;}
+.yellow{color:#facc15;}
+.red{color:#f87171;}
 
 canvas{
-  max-height:500px;
+  margin:10px;
+  max-height:420px;
 }
-
-.lasttime{
-  color:#888;
-  font-size:12px;
-  margin-top:3px;
-}
-
 </style>
 
 </head>
+
 <body>
 
-<div class="header">
-📊 Art_aTV Analytics PRO
-</div>
+<div class="header">📊 Analytics PRO 2.0 MAX</div>
 
 <div class="grid">
-
-<div class="card">
-<div class="big" id="totalClicks">0</div>
-<div class="label">🔥 Всего кликов</div>
+  <div class="card"><div class="big" id="total">0</div>🔥 клики</div>
+  <div class="card"><div class="big" id="shows">0</div>🎬 сериалов</div>
+  <div class="card"><div class="big" id="avg">0</div>📈 среднее</div>
+  <div class="card"><div class="big" id="top">—</div>🏆 лидер</div>
 </div>
 
-<div class="card">
-<div class="big" id="totalShows">0</div>
-<div class="label">🎬 Сериалов с кликами</div>
+<div class="controls">
+  <button onclick="setFilter(10)">TOP 10</button>
+  <button onclick="setFilter(20)">TOP 20</button>
+  <button onclick="setFilter(50)">TOP 50</button>
+  <button onclick="setFilter(9999)">ALL</button>
+  <button onclick="exportCSV()">EXPORT CSV</button>
 </div>
 
-<div class="card">
-<div class="big" id="avgClicks">0</div>
-<div class="label">📈 Среднее на сериал</div>
-</div>
+<input class="search" id="search" placeholder="Поиск сериала...">
 
-<div class="card">
-<div class="big" id="leader">—</div>
-<div class="label">🏆 Лидер</div>
-</div>
-
-</div>
+<canvas id="barChart"></canvas> <canvas id="pieChart"></canvas>
 
 <div class="section">
-<h2>📊 ТОП-20 сериалов</h2>
-<canvas id="chart"></canvas>
-</div>
-
-<input
-class="search"
-id="search"
-placeholder="Поиск сериала..."
-
->
-
-<div class="section">
-<h2>🔥 Полный рейтинг</h2>
-<div id="list"></div>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Сериал</th>
+<th>Клики</th>
+<th>%</th>
+<th>Активность</th>
+</tr>
+</thead>
+<tbody id="table"></tbody>
+</table>
 </div>
 
 <script>
@@ -179,179 +164,125 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
 
-let chart;
-let allData=[];
+let data = [];
+let limit = 20;
+let barChart, pieChart;
 
-function medal(index){
+function status(time){
+  const diff = Date.now() - (time || 0);
 
-  if(index===0) return "🥇";
-  if(index===1) return "🥈";
-  if(index===2) return "🥉";
-
-  return "#" + (index+1);
+  if(diff < 86400000) return "🟢";
+  if(diff < 604800000) return "🟡";
+  return "🔴";
 }
 
-function render(data){
+function render(){
 
-  let total=0;
+  let total = data.reduce((a,b)=>a + (b.count||0),0);
 
-  data.forEach(i=>{
-    total += i.count || 0;
-  });
+  document.getElementById("total").innerText = total;
+  document.getElementById("shows").innerText = data.length;
+  document.getElementById("avg").innerText = data.length ? (total/data.length).toFixed(1) : 0;
+  document.getElementById("top").innerText = data[0]?.title || "—";
 
-  document.getElementById("totalClicks").innerText = total;
-  document.getElementById("totalShows").innerText = data.length;
+  let q = document.getElementById("search").value.toLowerCase();
 
-  const avg =
-    data.length
-    ? (total/data.length).toFixed(1)
-    : 0;
+  let filtered = data.filter(i => i.title.toLowerCase().includes(q));
 
-  document.getElementById("avgClicks").innerText = avg;
+  let view = filtered.slice(0, limit);
 
-  document.getElementById("leader").innerText =
-    data.length
-    ? data[0].count
-    : 0;
+  let tbody = "";
 
-  const list=document.getElementById("list");
+  view.forEach((i,idx)=>{
 
-  const q=
-    document.getElementById("search")
-    .value
-    .toLowerCase();
+    let percent = total ? ((i.count/total)*100).toFixed(1) : 0;
 
-  const filtered=data.filter(item=>
-    item.title.toLowerCase().includes(q)
-  );
-
-  list.innerHTML=filtered.map((item,index)=>{
-
-    const percent =
-      total
-      ? ((item.count/total)*100).toFixed(1)
-      : 0;
-
-    const date =
-      item.time
-      ? new Date(item.time).toLocaleString("ru-RU")
-      : "нет данных";
-
-    return `
-    <div class="row">
-
-      <div class="rank">
-        ${medal(index)}
-      </div>
-
-      <div class="title">
-        ${item.title}
-        <div class="lasttime">
-          Последний клик: ${date}
-        </div>
-      </div>
-
-      <div class="count">
-        ${item.count}
-        <span class="percent">
-          ${percent}%
-        </span>
-      </div>
-
-    </div>
+    tbody += `
+      <tr>
+        <td class="rank">${idx+1}</td>
+        <td>${i.title}</td>
+        <td>${i.count}</td>
+        <td>${percent}%</td>
+        <td class="badge ${status(i.time)}">${status(i.time)}</td>
+      </tr>
     `;
-
-  }).join("");
-
-  drawChart(data);
-}
-
-function drawChart(data){
-
-  const top=data.slice(0,20);
-
-  const labels=
-    top.map(i=>i.title);
-
-  const values=
-    top.map(i=>i.count);
-
-  if(chart){
-    chart.destroy();
-  }
-
-  chart=new Chart(
-    document.getElementById("chart"),
-    {
-      type:"bar",
-      data:{
-        labels,
-        datasets:[{
-          label:"Клики",
-          data:values
-        }]
-      },
-      options:{
-        responsive:true,
-        plugins:{
-          legend:{
-            labels:{
-              color:"white"
-            }
-          }
-        },
-        scales:{
-          x:{
-            ticks:{
-              color:"white"
-            }
-          },
-          y:{
-            ticks:{
-              color:"white"
-            }
-          }
-        }
-      }
-    }
-  );
-}
-
-db.collection("clicks")
-.onSnapshot(snapshot=>{
-
-  let arr=[];
-
-  snapshot.forEach(doc=>{
-
-    const d=doc.data();
-
-    arr.push({
-      title:d.title || "Без названия",
-      count:d.count || 0,
-      time:d.time || 0
-    });
-
   });
 
-  arr.sort((a,b)=>
-    (b.count||0)-(a.count||0)
-  );
+  document.getElementById("table").innerHTML = tbody;
 
-  allData=arr;
+  drawCharts(view);
+}
 
-  render(allData);
+function drawCharts(view){
 
-});
+  let top20 = data.slice(0,20);
 
-document
-.getElementById("search")
-.addEventListener("input",()=>{
+  if(barChart) barChart.destroy();
 
-  render(allData);
+  barChart = new Chart(document.getElementById("barChart"),{
+    type:"bar",
+    data:{
+      labels:top20.map(i=>i.title),
+      datasets:[{
+        label:"Клики",
+        data:top20.map(i=>i.count)
+      }]
+    }
+  });
+
+  let top10 = data.slice(0,10);
+
+  if(pieChart) pieChart.destroy();
+
+  pieChart = new Chart(document.getElementById("pieChart"),{
+    type:"pie",
+    data:{
+      labels:top10.map(i=>i.title),
+      datasets:[{
+        data:top10.map(i=>i.count)
+      }]
+    }
+  });
+}
+
+function setFilter(v){
+  limit = v;
+  render();
+}
+
+function exportCSV(){
+
+  let csv = "title,count,time\n" +
+    data.map(i =>
+      `${i.title},${i.count},${i.time}`
+    ).join("\n");
+
+  let blob = new Blob([csv], {type:"text/csv"});
+  let url = URL.createObjectURL(blob);
+
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = "analytics.csv";
+  a.click();
+}
+
+document.getElementById("search").addEventListener("input",render);
+
+db.collection("clicks").onSnapshot(snap=>{
+
+  let arr = [];
+
+  snap.forEach(d=>{
+    arr.push(d.data());
+  });
+
+  arr.sort((a,b)=>(b.count||0)-(a.count||0));
+
+  data = arr;
+
+  render();
 
 });
 
