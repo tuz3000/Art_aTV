@@ -16,19 +16,20 @@ body {
 
 /* ШАПКА */
 .header {
-  padding:12px 16px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+  padding:14px 16px;
   background:#111;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
   position:sticky;
   top:0;
   z-index:10;
 }
 
+/* БОЛЬШОЙ ЗАГОЛОВОК */
 .brand {
-  font-size:15px;
-  font-weight:700;
+  font-size:20px;
+  font-weight:800;
 }
 
 .brand a {
@@ -36,24 +37,24 @@ body {
   text-decoration:none;
 }
 
-/* КНОПКА ПОДДЕРЖКИ (ЗАКРЕПЛЕНА) */
-.support-fixed {
-  position:sticky;
-  top:48px;
-  z-index:10;
-  background:#0b0b0f;
-  padding:10px 16px;
+/* ПОДДЕРЖКА СПРАВА (ПЛАВАЮЩАЯ КНОПКА) */
+.support-float {
+  position:fixed;
+  right:12px;
+  top:80px;
+  z-index:999;
 }
 
-.support-fixed a {
-  display:inline-block;
+.support-float a {
+  display:block;
   background:#3aa0ff;
   color:white;
   padding:10px 12px;
-  border-radius:10px;
+  border-radius:12px;
   text-decoration:none;
   font-size:13px;
   font-weight:600;
+  box-shadow:0 6px 14px rgba(58,160,255,0.35);
 }
 
 /* СЧЁТЧИК */
@@ -61,23 +62,6 @@ body {
   padding:10px 16px;
   font-size:14px;
   color:#aaa;
-}
-
-/* БЫСТРЫЕ БУКВЫ */
-.letters {
-  display:flex;
-  gap:6px;
-  flex-wrap:wrap;
-  padding:10px 16px;
-}
-
-.letters button {
-  background:#1a1a1a;
-  color:white;
-  border:none;
-  padding:6px 8px;
-  border-radius:6px;
-  font-size:12px;
 }
 
 /* ПОИСК */
@@ -145,6 +129,10 @@ input {
 
 /* мобилка */
 @media (max-width: 500px) {
+  .brand {
+    font-size:18px;
+  }
+
   .poster {
     width:70px;
     height:105px;
@@ -157,6 +145,10 @@ input {
   .btn {
     font-size:12px;
     padding:8px 10px;
+  }
+
+  .support-float {
+    top:70px;
   }
 }
 </style>
@@ -171,16 +163,15 @@ input {
   </div>
 </div>
 
-<!-- ПОДДЕРЖКА (ЗАКРЕПЛЕНА) -->
-<div class="support-fixed">
-  <a href="https://t.me/Art_aTV_support_bot" target="_blank">⚙️ Техподдержка</a>
+<!-- ПОДДЕРЖКА СПРАВА -->
+<div class="support-float">
+  <a href="https://t.me/Art_aTV_support_bot" target="_blank">
+    ⚙️ Поддержка
+  </a>
 </div>
 
 <!-- СЧЁТЧИК -->
 <div class="counter" id="counter">Загрузка...</div>
-
-<!-- БЫСТРЫЕ БУКВЫ -->
-<div class="letters" id="letters"></div>
 
 <!-- ПОИСК -->
 <input id="search" placeholder="Поиск сериалов...">
@@ -192,26 +183,8 @@ input {
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
-let data = [];
 let allData = [];
 
-const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЭЮЯ".split("");
-
-// кнопки букв
-const lettersBox = document.getElementById("letters");
-
-letters.forEach(l => {
-  const b = document.createElement("button");
-  b.innerText = l;
-  b.onclick = () => filterLetter(l);
-  lettersBox.appendChild(b);
-});
-
-function filterLetter(letter){
-  render(allData.filter(i => (i.title || "").toUpperCase().startsWith(letter)));
-}
-
-// загрузка данных
 fetch(SHEET)
 .then(r => r.text())
 .then(t => {
