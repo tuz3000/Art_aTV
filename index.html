@@ -2,14 +2,12 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Admin Real-Time</title>
+<title>Art_aTV Secure Admin</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body{
@@ -20,14 +18,13 @@ body{
 }
 
 .header{
-  padding:14px;
+  padding:16px;
   background:#111;
+  font-size:18px;
   font-weight:800;
 }
 
 .grid{
-  display:grid;
-  gap:14px;
   padding:14px;
 }
 
@@ -35,6 +32,7 @@ body{
   background:#15151c;
   padding:14px;
   border-radius:12px;
+  margin-bottom:12px;
 }
 
 .big{
@@ -42,35 +40,50 @@ body{
   font-weight:800;
   color:#3aa0ff;
 }
+
+.small{
+  color:#aaa;
+  font-size:13px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="header">📊 Real-Time Admin</div>
+<div id="denied" style="display:none;padding:20px">
+  ❌ Доступ запрещён
+</div>
 
-<div class="grid">
+<div id="app" style="display:none">
 
-  <div class="card">
-    <div class="big" id="onlineCount">0</div>
-    <div>🟢 Онлайн сейчас</div>
-    <div id="onlineList"></div>
+  <div class="header">
+    🔐 Admin Panel Art_aTV
   </div>
 
-  <div class="card">
-    <div class="big" id="users">0</div>
-    <div>👤 Пользователи</div>
-  </div>
+  <div class="grid">
 
-  <div class="card">
-    <div class="big" id="clicks">0</div>
-    <div>🔥 Клики</div>
+    <div class="card">
+      <div class="big" id="online">0</div>
+      <div class="small">🟢 Онлайн сейчас</div>
+    </div>
+
+    <div class="card">
+      <div class="big" id="users">0</div>
+      <div class="small">👤 Уникальные пользователи</div>
+    </div>
+
+    <div class="card">
+      <div class="big" id="clicks">0</div>
+      <div class="small">🔥 Всего кликов</div>
+    </div>
+
   </div>
 
 </div>
 
 <script>
 
+// ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
@@ -84,53 +97,55 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 
-// ================= ONLINE REAL-TIME =================
-db.collection("online").onSnapshot(snap=>{
+// ================= TELEGRAM =================
+let tg = window.Telegram?.WebApp;
+tg?.expand();
 
-  let list=[];
-  let now=Date.now();
+const userId = tg?.initDataUnsafe?.user?.id;
 
-  snap.forEach(d=>{
-    const u=d.data();
 
-    if(now-u.lastSeen<60000){
-      list.push(u);
-    }
+// ================= 🔐 ACCESS =================
+const ADMIN_ID = 161181425;
+
+if(userId !== ADMIN_ID){
+  document.getElementById("denied").style.display = "block";
+}else{
+  document.getElementById("app").style.display = "block";
+  init();
+}
+
+
+// ================= REAL-TIME =================
+function init(){
+
+  // ONLINE
+  db.collection("online").onSnapshot(snap=>{
+    document.getElementById("online").innerText = snap.size;
   });
 
-  document.getElementById("onlineCount").innerText=list.length;
+  // USERS
+  db.collection("analytics").onSnapshot(snap=>{
+    let set = new Set();
 
-  const box=document.getElementById("onlineList");
-  box.innerHTML="";
+    snap.forEach(d=>{
+      set.add(d.data().user_id);
+    });
 
-  list.forEach(u=>{
-    box.innerHTML+=`👤 @${u.username}<br>`;
-  });
-});
-
-
-// ================= USERS =================
-db.collection("analytics").onSnapshot(snap=>{
-  let set=new Set();
-
-  snap.forEach(d=>{
-    set.add(d.data().user_id);
+    document.getElementById("users").innerText = set.size;
   });
 
-  document.getElementById("users").innerText=set.size;
-});
+  // CLICKS
+  db.collection("clicks").onSnapshot(snap=>{
+    let total = 0;
 
+    snap.forEach(d=>{
+      total += d.data().count || 0;
+    });
 
-// ================= CLICKS =================
-db.collection("clicks").onSnapshot(snap=>{
-  let total=0;
-
-  snap.forEach(d=>{
-    total+=d.data().count||0;
+    document.getElementById("clicks").innerText = total;
   });
 
-  document.getElementById("clicks").innerText=total;
-});
+}
 
 </script>
 
