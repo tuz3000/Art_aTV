@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Netflix 3.0 @Art_aTV</title>
+<title>Каталог @Art_aTV</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -17,6 +17,7 @@ body{
   color:white;
 }
 
+/* HEADER */
 .header{
   padding:16px;
   font-size:18px;
@@ -24,12 +25,39 @@ body{
   background:#111;
 }
 
+.header a{
+  color:#3aa0ff;
+  text-decoration:none;
+}
+
+/* SUPPORT BUTTON */
+.support-btn{
+  position:fixed;
+  top:12px;
+  right:12px;
+  background:#2a2a2a;
+  color:#ccc;
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:12px;
+  cursor:pointer;
+  z-index:999;
+  transition:0.3s;
+}
+
+.support-btn:hover{
+  background:#3a3a3a;
+  color:white;
+}
+
+/* SECTION */
 .section{
   padding:12px;
   color:#3aa0ff;
   font-weight:800;
 }
 
+/* CARD */
 .card{
   display:flex;
   gap:12px;
@@ -61,6 +89,7 @@ body{
   text-decoration:none;
 }
 
+/* TOP */
 .top{
   display:flex;
   justify-content:space-between;
@@ -71,36 +100,37 @@ body{
   cursor:pointer;
 }
 
-/* highlight */
+/* HIGHLIGHT */
 .highlight{
   border:2px solid #3aa0ff;
   box-shadow:0 0 20px rgba(58,160,255,0.6);
   transform:scale(1.02);
 }
 
-/* ================= UP BUTTON ================= */
+/* UP BUTTON (modern glass style) */
 .up-btn{
   position:fixed;
-  bottom:20px;
-  right:20px;
-  width:50px;
-  height:50px;
+  bottom:18px;
+  right:18px;
+  width:52px;
+  height:52px;
   border-radius:50%;
-  background:rgba(58,160,255,0.25);
-  backdrop-filter: blur(8px);
-  border:1px solid rgba(58,160,255,0.4);
+  background:rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  border:1px solid rgba(255,255,255,0.15);
   color:white;
-  font-size:22px;
+  font-size:20px;
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
   z-index:999;
-  transition:0.3s;
+  transition:0.25s;
+  box-shadow:0 8px 25px rgba(0,0,0,0.4);
 }
 
 .up-btn:hover{
-  background:rgba(58,160,255,0.45);
+  background:rgba(255,255,255,0.15);
   transform:scale(1.1);
 }
 </style>
@@ -108,7 +138,15 @@ body{
 
 <body>
 
-<div class="header">🎬 Netflix 3.0 @Art_aTV</div>
+<!-- SUPPORT -->
+<div class="support-btn" onclick="window.open('https://t.me/Art_aTV','_blank')">
+⚙️ Support
+</div>
+
+<!-- HEADER -->
+<div class="header">
+Каталог <a href="https://t.me/Art_aTV" target="_blank">@Art_aTV</a>
+</div>
 
 <div class="section">🔥 ТОП 5 популярных</div>
 <div id="top"></div>
@@ -116,8 +154,8 @@ body{
 <div class="section">🎬 Все сериалы</div>
 <div id="list"></div>
 
-<!-- 🔵 UP BUTTON -->
-<div class="up-btn" onclick="scrollTopPage()">⬆️</div>
+<!-- UP BUTTON -->
+<div class="up-btn" onclick="scrollTopPage()">↑</div>
 
 <script>
 
@@ -125,10 +163,7 @@ body{
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
-  projectId: "art-atv",
-  storageBucket: "art-atv.firebasestorage.app",
-  messagingSenderId: "549965698241",
-  appId: "1:549965698241:web:86cfa4dc6048d48d4ef040"
+  projectId: "art-atv"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -146,7 +181,7 @@ function trackClick(title){
 }
 
 
-// ================= LOAD DATA =================
+// ================= LOAD =================
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
@@ -210,12 +245,11 @@ function loadTop(){
   db.collection("clicks").onSnapshot(snap=>{
 
     let arr=[];
-
     snap.forEach(d=>arr.push(d.data()));
 
     arr.sort((a,b)=>(b.count||0)-(a.count||0));
 
-    arr=arr.slice(0,5);
+    arr = arr.slice(0,5);
 
     const box=document.getElementById("top");
     box.innerHTML="";
@@ -234,7 +268,7 @@ function loadTop(){
 }
 
 
-// ================= GO TO + HIGHLIGHT =================
+// ================= SCROLL + HIGHLIGHT =================
 function goTo(title){
 
   const id="card-"+title.replaceAll(" ","_");
@@ -252,12 +286,9 @@ function goTo(title){
 }
 
 
-// ================= SCROLL TOP =================
+// ================= TOP SCROLL =================
 function scrollTopPage(){
-  window.scrollTo({
-    top:0,
-    behavior:"smooth"
-  });
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
 </script>
