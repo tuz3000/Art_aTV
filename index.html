@@ -44,7 +44,7 @@ input{
 .section{
   padding:14px;
   color:#3aa0ff;
-  font-weight:700;
+  font-weight:800;
 }
 
 .list{
@@ -83,6 +83,21 @@ input{
   font-size:12px;
   text-decoration:none;
 }
+
+/* POPULAR */
+.popular{
+  padding:12px;
+}
+
+.pop-item{
+  padding:10px;
+  margin-bottom:8px;
+  background:#1a1a22;
+  border-radius:10px;
+  display:flex;
+  justify-content:space-between;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -95,6 +110,10 @@ input{
 <div class="counter" id="counter">Загрузка...</div>
 
 <input id="search" placeholder="Поиск...">
+
+<!-- 🔥 POPULAR -->
+<div class="section">🔥 ТОП популярное</div>
+<div class="popular" id="popular"></div>
 
 <div class="section">🎬 Все сериалы</div>
 <div class="list" id="list"></div>
@@ -125,7 +144,7 @@ const user = {
 };
 
 
-// ================= ONLINE SYSTEM =================
+// ================= ONLINE =================
 const onlineRef = db.collection("online").doc(String(user.id));
 
 function setOnline(){
@@ -137,10 +156,6 @@ function setOnline(){
 
 setOnline();
 setInterval(setOnline,30000);
-
-window.addEventListener("beforeunload",()=>{
-  onlineRef.delete();
-});
 
 
 // ================= ANALYTICS =================
@@ -155,7 +170,7 @@ function trackEvent(type,data=""){
 }
 
 
-// ================= DATA (СЕРИАЛЫ) =================
+// ================= DATA =================
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
@@ -182,12 +197,13 @@ fetch(SHEET)
   "🎬 Всего сериалов: " + allData.length;
 
   render(allData);
+  loadPopular();
 
-  trackEvent("open_app");
+  trackEvent("open");
 });
 
 
-// ================= RENDER =================
+// ================= ALL =================
 function render(list){
   const box=document.getElementById("list");
   box.innerHTML="";
@@ -206,11 +222,56 @@ function render(list){
       <a class="btn"
         href="${i.link}"
         target="_blank"
-        onclick="trackEvent('click', '${i.title}')">
-        Оформить доступ
+        onclick="trackEvent('click','${i.title}')">
+        Оформить
       </a>
 
     </div>`;
+  });
+}
+
+
+// ================= POPULAR =================
+function loadPopular(){
+
+  db.collection("clicks").onSnapshot(snap=>{
+
+    let arr=[];
+
+    snap.forEach(d=>arr.push(d.data()));
+
+    arr.sort((a,b)=>(b.count||0)-(a.count||0));
+
+    arr = arr.slice(0,5);
+
+    const box=document.getElementById("popular");
+    box.innerHTML="";
+
+    arr.forEach((i,index)=>{
+
+      box.innerHTML+=`
+      <div class="pop-item"
+        onclick="scrollToItem('${i.title.toLowerCase()}')">
+
+        <div>${index+1}. ${i.title}</div>
+        <div>🔥 ${i.count||0}</div>
+
+      </div>`;
+    });
+
+  });
+}
+
+
+// ================= SCROLL =================
+function scrollToItem(title){
+
+  const items=document.querySelectorAll(".item");
+
+  items.forEach(el=>{
+    if(el.innerText.toLowerCase().includes(title)){
+      el.scrollIntoView({behavior:"smooth",block:"center"});
+    }
   });
 }
 
