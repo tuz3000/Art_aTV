@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Art_aTV Admin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0b0b0f;
+  color:white;
+}
+
+.header{
+  padding:16px;
+  background:#111;
+  font-weight:800;
+}
+
+.card{
+  margin:12px;
+  padding:14px;
+  background:#15151c;
+  border-radius:12px;
+}
+
+.big{
+  font-size:22px;
+  font-weight:800;
+  color:#3aa0ff;
+}
+
+input{
+  width:90%;
+  padding:12px;
+  margin:10px;
+  border-radius:10px;
+  border:none;
+}
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  background:#3aa0ff;
+  color:white;
+  font-weight:700;
+}
+</style>
+</head>
+
+<body>
+
+<div id="login" class="card">
+  <h2>🔐 Admin вход</h2>
+
+  <input id="key" placeholder="Введите ключ">
+  <button onclick="login()">Войти</button>
+
+  <p style="color:#888;font-size:12px;margin-top:10px">
+    Или открой: ?key=art123
+  </p>
+</div>
+
+<div id="panel" style="display:none">
+
+  <div class="header">
+    📊 Art_aTV Admin Panel
+  </div>
+
+  <div class="card">
+    <div class="big" id="online">0</div>
+    🟢 Онлайн
+  </div>
+
+  <div class="card">
+    <div class="big" id="users">0</div>
+    👤 Пользователи
+  </div>
+
+  <div class="card">
+    <div class="big" id="clicks">0</div>
+    🔥 Клики
+  </div>
+
+</div>
+
+<script>
+
+// ================= FIREBASE =================
+const firebaseConfig = {
+  apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
+  authDomain: "art-atv.firebaseapp.com",
+  projectId: "art-atv",
+  storageBucket: "art-atv.firebasestorage.app",
+  messagingSenderId: "549965698241",
+  appId: "1:549965698241:web:86cfa4dc6048d48d4ef040"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+
+// ================= ACCESS =================
+const ADMIN_KEY = "art123";
+
+function checkAuto(){
+
+  const urlKey = new URLSearchParams(location.search).get("key");
+
+  if(urlKey === ADMIN_KEY){
+    showPanel();
+  }
+}
+
+checkAuto();
+
+function login(){
+
+  const key = document.getElementById("key").value;
+
+  if(key === ADMIN_KEY){
+    showPanel();
+  } else {
+    alert("❌ Неверный ключ");
+  }
+}
+
+function showPanel(){
+  document.getElementById("login").style.display="none";
+  document.getElementById("panel").style.display="block";
+  init();
+}
+
+
+// ================= LIVE DATA =================
+function init(){
+
+  db.collection("online").onSnapshot(snap=>{
+    document.getElementById("online").innerText = snap.size;
+  });
+
+  db.collection("analytics").onSnapshot(snap=>{
+    let set=new Set();
+
+    snap.forEach(d=>{
+      set.add(d.data().user_id);
+    });
+
+    document.getElementById("users").innerText = set.size;
+  });
+
+  db.collection("clicks").onSnapshot(snap=>{
+    let total=0;
+
+    snap.forEach(d=>{
+      total += d.data().count || 0;
+    });
+
+    document.getElementById("clicks").innerText = total;
+  });
+
+}
+
+</script>
+
+</body>
+</html>
