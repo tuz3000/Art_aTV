@@ -6,7 +6,6 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
@@ -18,7 +17,6 @@ body{
   color:white;
 }
 
-/* шапка */
 .header{
   padding:14px 16px;
   background:#111;
@@ -40,7 +38,6 @@ body{
   text-decoration:none;
 }
 
-/* поддержка */
 .support{
   position:fixed;
   right:12px;
@@ -59,14 +56,11 @@ body{
   font-weight:600;
 }
 
-/* счётчик */
 .counter{
   padding:10px 16px;
-  font-size:14px;
   color:#aaa;
 }
 
-/* поиск */
 input{
   width:92%;
   margin:10px 4%;
@@ -75,17 +69,14 @@ input{
   border:none;
   background:#1a1a1a;
   color:white;
-  font-size:16px;
 }
 
-/* секции */
 .section{
   padding:6px 12px;
   color:#3aa0ff;
   font-weight:700;
 }
 
-/* список */
 .list{
   display:flex;
   flex-direction:column;
@@ -93,7 +84,6 @@ input{
   padding:10px;
 }
 
-/* карточка */
 .item{
   display:flex;
   align-items:center;
@@ -103,23 +93,19 @@ input{
   border-radius:14px;
 }
 
-/* постер */
 .poster{
   width:80px;
   height:120px;
   object-fit:cover;
   border-radius:8px;
-  cursor:pointer;
 }
 
-/* название */
 .title{
   flex:1;
   font-size:16px;
   font-weight:700;
 }
 
-/* кнопка */
 .btn{
   background:#3aa0ff;
   color:white;
@@ -134,12 +120,11 @@ input{
 
 <body>
 
-<!-- поддержка -->
+<!-- ⚙️ ТЕХПОДДЕРЖКА (исправлено) -->
 <div class="support">
-  <a href="https://t.me/Art_aTV_support_bot">⚙️ Поддержка</a>
+  <a href="https://t.me/Art_aTV_support_bot">⚙️ Техподдержка</a>
 </div>
 
-<!-- шапка -->
 <div class="header">
   <div class="brand">
     Каталог сериалов <a href="https://t.me/Art_aTV">@Art_aTV</a>
@@ -158,7 +143,6 @@ input{
 
 <script>
 
-// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
@@ -171,37 +155,44 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🔥 КЛИКИ (правильная система)
-function trackClick(title){
-  const ref = db.collection("clicks").doc(title);
+// 🔥 НОРМАЛИЗАЦИЯ НАЗВАНИЯ (УБИРАЕТ ДУБЛИ)
+function cleanTitle(title){
+  return title.trim().toLowerCase();
+}
 
-  ref.set({
+// 🔥 КЛИКИ (фикс дублей)
+function trackClick(title){
+
+  const key = cleanTitle(title);
+
+  db.collection("clicks").doc(key).set({
     title: title,
     count: firebase.firestore.FieldValue.increment(1),
     time: Date.now()
   }, { merge:true });
+
 }
 
-// 📥 Google Sheets
+// 📥 SHEET
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
-let allData = [];
+let allData=[];
 
 fetch(SHEET)
 .then(r=>r.text())
 .then(t=>{
 
-  const rows = t.trim().split("\n").slice(1);
+  const rows=t.trim().split("\n").slice(1);
 
-  allData = rows.map(r=>{
-    const cols = r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+  allData=rows.map(r=>{
+    const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
 
     return{
-      title:(cols[0]||"").trim(),
-      link:(cols[1]||"").trim(),
-      poster:(cols[2]||"").trim(),
-      kp:(cols[3]||"").trim()
+      title:(c[0]||"").trim(),
+      link:(c[1]||"").trim(),
+      poster:(c[2]||"").trim(),
+      kp:(c[3]||"").trim()
     };
   });
 
@@ -212,7 +203,7 @@ fetch(SHEET)
   loadPopular();
 });
 
-// 🎬 ВСЕ СЕРИАЛЫ
+// 🎬 ВСЕ
 function render(list){
   const box=document.getElementById("list");
   box.innerHTML="";
@@ -238,25 +229,28 @@ function render(list){
   });
 }
 
-// 🔥 ПОПУЛЯРНОЕ (Netflix стиль)
+// 🔥 ПОПУЛЯРНОЕ (ТОП 5 + СОРТИРОВКА)
 function loadPopular(){
+
   db.collection("clicks")
-  .orderBy("count","desc")
-  .limit(5)
   .get()
   .then(snap=>{
 
-    const popular=[];
+    let arr=[];
 
     snap.forEach(doc=>{
-      popular.push(doc.data());
+      arr.push(doc.data());
     });
 
-    renderPopular(popular);
+    arr.sort((a,b)=> (b.count||0)-(a.count||0));
+
+    arr = arr.slice(0,5);
+
+    renderPopular(arr);
   });
 }
 
-// 🔥 отрисовка популярного
+// 🔥 ОТРИСОВКА
 function renderPopular(list){
   const box=document.getElementById("popular");
   box.innerHTML="";
@@ -275,8 +269,9 @@ function renderPopular(list){
 // 🔍 поиск
 document.getElementById("search").addEventListener("input",e=>{
   const q=e.target.value.toLowerCase();
+
   render(allData.filter(i=>
-    (i.title||"").toLowerCase().includes(q)
+    i.title.toLowerCase().includes(q)
   ));
 });
 
