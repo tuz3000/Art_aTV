@@ -1,18 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <title>Serials</title>
+
 <style>
-body { font-family: Arial; background:#111; color:white; margin:0; }
-input { width:90%; padding:10px; margin:15px; }
-.container { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; padding:10px; }
-.card { background:#222; border-radius:10px; overflow:hidden; cursor:pointer; }
-.card img { width:100%; height:220px; object-fit:cover; }
-.card h3 { font-size:14px; margin:5px; }
-.card p { font-size:12px; margin:5px; color:#aaa; }
+body {
+  margin:0;
+  font-family: Arial;
+  background:#111;
+  color:white;
+}
+
+input {
+  width:90%;
+  padding:10px;
+  margin:15px;
+  border-radius:8px;
+  border:none;
+}
+
+.container {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:10px;
+  padding:10px;
+}
+
+.card {
+  background:#222;
+  border-radius:12px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.card:hover {
+  transform:scale(1.03);
+}
+
+.card img {
+  width:100%;
+  height:220px;
+  object-fit:cover;
+}
+
+.card h3 {
+  font-size:14px;
+  margin:6px;
+}
+
+.card p {
+  font-size:12px;
+  margin:6px;
+  color:#aaa;
+}
+
+a {
+  color:#4da3ff;
+  text-decoration:none;
+}
 </style>
 </head>
+
 <body>
 
 <input id="search" placeholder="Поиск сериалов...">
@@ -20,22 +70,27 @@ input { width:90%; padding:10px; margin:15px; }
 <div class="container" id="list"></div>
 
 <script>
+
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
 let data = [];
 
 fetch(SHEET_URL)
-.then(r => r.text())
-.then(t => {
-    const rows = t.split("\n").slice(1);
+.then(res => res.text())
+.then(text => {
 
-    data = rows.map(r => {
-        const c = r.split(",");
+    const rows = text.trim().split("\n").slice(1);
+
+    data = rows.map(row => {
+
+        // умный парсинг (НЕ ломается от запятых в описании)
+        const cols = row.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+
         return {
-            poster: c[0],
-            title: c[1],
-            link: c[2],
-            desc: c[3]
+            poster: cols[0],
+            title: cols[1],
+            link: cols[2],
+            desc: cols.slice(3).join(",")
         };
     });
 
@@ -53,7 +108,7 @@ function render(list){
         <div class="card" onclick="window.open('${i.link}','_blank')">
             <img src="${i.poster}">
             <h3>${i.title}</h3>
-            <p>${i.desc || ''}</p>
+            <p><a href="${i.desc}" target="_blank">Открыть Kinopoisk</a></p>
         </div>`;
     });
 }
@@ -62,6 +117,7 @@ document.getElementById("search").addEventListener("input", e => {
     const q = e.target.value.toLowerCase();
     render(data.filter(i => (i.title || "").toLowerCase().includes(q)));
 });
+
 </script>
 
 </body>
