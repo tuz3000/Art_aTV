@@ -2,12 +2,14 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Каталог сериалов @Art_aTV</title>
+<title>Admin Real-Time</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body{
@@ -18,148 +20,54 @@ body{
 }
 
 .header{
-  padding:14px 16px;
+  padding:14px;
   background:#111;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  position:sticky;
-  top:0;
-  z-index:10;
-}
-
-.brand{
-  font-size:20px;
   font-weight:800;
 }
 
-.brand a{
-  color:#3aa0ff;
-  text-decoration:none;
-}
-
-.support{
-  position:fixed;
-  right:12px;
-  top:12px;
-  z-index:999;
-}
-
-.support a{
-  display:block;
-  background:#2b2b2b;
-  color:#ddd;
-  padding:8px 10px;
-  border-radius:10px;
-  text-decoration:none;
-  font-size:12px;
-  font-weight:600;
-}
-
-.counter{
-  padding:10px 16px;
-  color:#aaa;
-}
-
-input{
-  width:92%;
-  margin:10px 4%;
+.grid{
+  display:grid;
+  gap:14px;
   padding:14px;
-  border-radius:12px;
-  border:none;
-  background:#1a1a1a;
-  color:white;
 }
 
-/* ТОП */
-.section{
-  padding:14px 12px;
-  color:#3aa0ff;
-  font-weight:700;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  cursor:pointer;
-}
-
-/* разрыв между блоками */
-.section-gap{
-  margin-top:30px;
-}
-
-.list{
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-  padding:12px;
-}
-
-.item{
-  display:flex;
-  align-items:center;
-  gap:14px;
+.card{
   background:#15151c;
   padding:14px;
-  border-radius:14px;
+  border-radius:12px;
 }
 
-.poster{
-  width:80px;
-  height:120px;
-  object-fit:cover;
-  border-radius:8px;
-}
-
-.title{
-  flex:1;
-  font-size:16px;
-  font-weight:700;
-}
-
-.btn{
-  background:#3aa0ff;
-  color:white;
-  padding:10px 12px;
-  border-radius:10px;
-  font-size:13px;
-  font-weight:600;
-  text-decoration:none;
+.big{
+  font-size:22px;
+  font-weight:800;
+  color:#3aa0ff;
 }
 </style>
 </head>
 
 <body>
 
-<div class="support">
-  <a href="https://t.me/Art_aTV_support_bot">⚙️ Техподдержка</a>
-</div>
+<div class="header">📊 Real-Time Admin</div>
 
-<div class="header">
-  <div class="brand">
-    Каталог сериалов <a href="https://t.me/Art_aTV">@Art_aTV</a>
+<div class="grid">
+
+  <div class="card">
+    <div class="big" id="onlineCount">0</div>
+    <div>🟢 Онлайн сейчас</div>
+    <div id="onlineList"></div>
   </div>
+
+  <div class="card">
+    <div class="big" id="users">0</div>
+    <div>👤 Пользователи</div>
+  </div>
+
+  <div class="card">
+    <div class="big" id="clicks">0</div>
+    <div>🔥 Клики</div>
+  </div>
+
 </div>
-
-<div class="counter" id="counter">Загрузка...</div>
-
-<input id="search" placeholder="Поиск сериалов...">
-
-<!-- 🔥 ТОП -->
-<div class="section" onclick="togglePopular()">
-  <span>🏆 ТОП 5 популярных</span>
-  <span id="arrow">⯈</span>
-</div>
-
-<div id="popularWrap" style="display:none;">
-  <div class="list" id="popular"></div>
-</div>
-
-<!-- 🎬 ВСЕ -->
-<div class="section section-gap">
-  🎬 Все сериалы
-</div>
-
-<div class="list" id="list"></div>
 
 <script>
 
@@ -175,156 +83,53 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ключ
-function key(t){
-  return t.trim().toLowerCase();
-}
 
-// клики
-function trackClick(title){
-  db.collection("clicks").doc(key(title)).set({
-    title,
-    count: firebase.firestore.FieldValue.increment(1),
-    time: Date.now()
-  },{merge:true});
-}
+// ================= ONLINE REAL-TIME =================
+db.collection("online").onSnapshot(snap=>{
 
-// SHEET
-const SHEET =
-"https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
+  let list=[];
+  let now=Date.now();
 
-let allData=[];
+  snap.forEach(d=>{
+    const u=d.data();
 
-fetch(SHEET)
-.then(r=>r.text())
-.then(t=>{
-
-  const rows=t.trim().split("\n").slice(1);
-
-  allData=rows.map(r=>{
-    const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
-
-    return{
-      title:(c[0]||"").trim(),
-      link:(c[1]||"").trim(),
-      poster:(c[2]||"").trim(),
-      kp:(c[3]||"").trim()
-    };
+    if(now-u.lastSeen<60000){
+      list.push(u);
+    }
   });
 
-  document.getElementById("counter").innerText =
-  "🎬 Всего сериалов: " + allData.length;
+  document.getElementById("onlineCount").innerText=list.length;
 
-  render(allData);
-  loadPopular();
+  const box=document.getElementById("onlineList");
+  box.innerHTML="";
+
+  list.forEach(u=>{
+    box.innerHTML+=`👤 @${u.username}<br>`;
+  });
 });
 
-// 🎬 список (БЕЗ ЭМОДЖИ)
-function render(list){
-  const box=document.getElementById("list");
-  box.innerHTML="";
 
-  list.forEach(i=>{
+// ================= USERS =================
+db.collection("analytics").onSnapshot(snap=>{
+  let set=new Set();
 
-    box.innerHTML+=`
-    <div class="item" id="${key(i.title)}">
-
-      <img class="poster"
-        src="${i.poster}"
-        onclick="window.open('${i.kp}','_blank')">
-
-      <div class="title">${i.title}</div>
-
-      <a class="btn"
-        href="${i.link}"
-        target="_blank"
-        onclick="trackClick('${i.title}')">
-        Оформить доступ
-      </a>
-
-    </div>`;
+  snap.forEach(d=>{
+    set.add(d.data().user_id);
   });
-}
 
-// 🔥 ТОП
-function loadPopular(){
+  document.getElementById("users").innerText=set.size;
+});
 
-  db.collection("clicks")
-  .get()
-  .then(snap=>{
 
-    let arr=[];
+// ================= CLICKS =================
+db.collection("clicks").onSnapshot(snap=>{
+  let total=0;
 
-    snap.forEach(d=>arr.push(d.data()));
-
-    arr.sort((a,b)=>(b.count||0)-(a.count||0));
-
-    arr=arr.slice(0,5);
-
-    renderPopular(arr);
+  snap.forEach(d=>{
+    total+=d.data().count||0;
   });
-}
 
-// 🔥 ТОП UI
-function renderPopular(list){
-
-  const box=document.getElementById("popular");
-  box.innerHTML="";
-
-  const emojis=["🔥","⭐","⚡","💎","🚀"];
-
-  list.forEach((i,index)=>{
-
-    box.innerHTML+=`
-    <div class="item"
-      style="cursor:pointer"
-      onclick="scrollToItem('${key(i.title)}')">
-
-      <div class="title">
-        ${index+1}. ${i.title}
-      </div>
-
-      <div style="color:#3aa0ff;font-weight:700">
-        ${emojis[index]} ${i.count||0}
-      </div>
-
-    </div>`;
-  });
-}
-
-// scroll
-function scrollToItem(id){
-
-  const el=document.getElementById(id);
-  if(!el) return;
-
-  el.scrollIntoView({behavior:"smooth",block:"center"});
-
-  el.style.outline="2px solid #3aa0ff";
-
-  setTimeout(()=>el.style.outline="",1500);
-}
-
-// раскрытие
-let open=false;
-
-function togglePopular(){
-  open=!open;
-
-  document.getElementById("popularWrap").style.display =
-  open ? "block" : "none";
-
-  document.getElementById("arrow").innerText =
-  open ? "⯆" : "⯈";
-}
-
-// поиск
-document.getElementById("search").addEventListener("input",e=>{
-  const q=e.target.value.toLowerCase();
-
-  render(allData.filter(i=>
-    i.title.toLowerCase().includes(q)
-  ));
+  document.getElementById("clicks").innerText=total;
 });
 
 </script>
