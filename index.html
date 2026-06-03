@@ -6,115 +6,88 @@
 
 <style>
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #0b0b0f;
-  color: white;
+  margin:0;
+  font-family: Arial;
+  background:#0b0b0f;
+  color:white;
 }
 
-/* верх */
-.header {
-  padding: 18px;
-  font-size: 20px;
-  font-weight: bold;
-  background: #111;
-  color: #e50914;
-}
-
-/* поиск */
 input {
-  width: 92%;
-  margin: 12px 4%;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  outline: none;
-  background: #1a1a1a;
-  color: white;
+  width:92%;
+  margin:12px 4%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  background:#1a1a1a;
+  color:white;
 }
 
-/* список */
 .list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 10px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:10px;
 }
 
-/* карточка */
 .item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #15151c;
-  padding: 10px;
-  border-radius: 12px;
-  transition: 0.2s;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  background:#15151c;
+  padding:10px;
+  border-radius:12px;
 }
 
-.item:hover {
-  background: #1f1f2a;
-}
-
-/* постер */
 .poster {
-  width: 55px;
-  height: 85px;
-  border-radius: 6px;
-  object-fit: cover;
-  cursor: pointer;
+  width:55px;
+  height:85px;
+  object-fit:cover;
+  border-radius:6px;
+  cursor:pointer;
 }
 
-/* название */
 .title {
-  flex: 1;
-  font-size: 14px;
+  flex:1;
+  font-size:14px;
 }
 
-/* кнопка */
 .btn {
-  background: #e50914;
-  color: white;
-  padding: 7px 10px;
-  border-radius: 8px;
-  font-size: 12px;
-  text-decoration: none;
-  white-space: nowrap;
+  background:#e50914;
+  color:white;
+  padding:7px 10px;
+  border-radius:8px;
+  font-size:12px;
+  text-decoration:none;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">CATALOG</div>
-
-<input id="search" placeholder="Поиск сериалов...">
+<input id="search" placeholder="Поиск...">
 
 <div class="list" id="list"></div>
 
 <script>
 
-const SHEET_URL =
-"https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
+const API =
+"https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/gviz/tq?tqx=out:json";
 
 let data = [];
 
-fetch(SHEET_URL)
+fetch(API)
 .then(r => r.text())
 .then(t => {
 
-    const rows = t.trim().split("\n").slice(1);
+    const json = JSON.parse(t.substring(47).slice(0, -2));
+    const rows = json.table.rows;
 
-    data = rows.map(r => {
-        const cols = r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
-
-        return {
-            poster: cols[0],
-            title: cols[1],
-            link: cols[2],
-            kp: cols[3]
-        };
-    });
+    data = rows.map(r => ({
+        title: r.c[0]?.v || "",
+        link: r.c[1]?.v || "",
+        poster: r.c[2]?.v || "",
+        kp: r.c[3]?.v || ""
+    }));
 
     render(data);
 });
@@ -129,15 +102,12 @@ function render(list){
         box.innerHTML += `
         <div class="item">
 
-            <!-- постер → Kinopoisk -->
             <img class="poster"
                  src="${i.poster}"
                  onclick="window.open('${i.kp}','_blank')">
 
-            <!-- название -->
             <div class="title">${i.title}</div>
 
-            <!-- кнопка → бот -->
             <a class="btn"
                href="${i.link}"
                target="_blank"
@@ -149,7 +119,6 @@ function render(list){
     });
 }
 
-/* поиск */
 document.getElementById("search").addEventListener("input", e => {
     const q = e.target.value.toLowerCase();
     render(data.filter(i =>
