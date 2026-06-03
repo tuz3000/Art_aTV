@@ -59,9 +59,8 @@ body{
 .card{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:12px;
+  gap:14px;
+  padding:14px;
   margin:10px 12px;
   background:#15151c;
   border-radius:12px;
@@ -69,31 +68,27 @@ body{
 
 /* POSTER */
 .card img{
-  width:70px;
-  height:100px;
+  width:80px;
+  height:115px;
   object-fit:cover;
-  border-radius:6px;
+  border-radius:8px;
   cursor:pointer;
 }
 
-/* TITLE (ЦЕНТР + АВТО SIZE) */
+/* TITLE BIG + BOLD */
 .title{
   flex:1;
-  text-align:center;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:800;
-  font-size:clamp(12px, 2.2vw, 18px);
-  padding:0 10px;
+  font-weight:900;
+  font-size:20px;
+  line-height:1.2;
 }
 
 /* BUTTON */
 .btn{
   background:#3aa0ff;
-  padding:8px 10px;
+  padding:9px 12px;
   border-radius:8px;
-  font-size:12px;
+  font-size:13px;
   color:white;
   text-decoration:none;
   white-space:nowrap;
@@ -106,7 +101,7 @@ body{
   transform:scale(1.02);
 }
 
-/* UP */
+/* UP BUTTON */
 .up-btn{
   position:fixed;
   bottom:18px;
@@ -208,29 +203,23 @@ function trackClick(title){
 }
 
 
-// LOAD CSV
-const SHEET =
-"https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
+// REALTIME SERIES
+db.collection("series").onSnapshot(snap=>{
 
-let data=[];
+  data = [];
 
-fetch(SHEET).then(r=>r.text()).then(t=>{
+  snap.forEach(doc=>{
+    const d = doc.data();
 
-  const rows=t.trim().split("\n").slice(1);
-
-  data = rows.map(r=>{
-    const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
-
-    return{
-      title:c[0] || "",
-      link:c[1] || "",
-      poster:c[2] || "",
-      kpLink:c[3] || ""   // ⚠️ ВАЖНО: Кинопоиск СЮДА
-    };
+    data.push({
+      title: d.title || "",
+      link: d.link || "",
+      poster: d.poster || "",
+      kpLink: d["Ссылка на КП"] || d.kpLink || ""   // 🔥 ВАЖНЫЙ ФИКС
+    });
   });
 
   render();
-  loadTop();
 });
 
 
@@ -242,13 +231,12 @@ function render(){
 
   data.forEach(i=>{
 
-    const safeTitle = i.title.replaceAll(" ","_");
-
     box.innerHTML+=`
       <div class="card">
 
+        <!-- 🔥 ПОСТЕР = ОТКРЫВАЕТ KP -->
         <img src="${i.poster}"
-          onclick="openModal('${i.title}','${i.poster}','${i.kpLink}')">
+          onclick="openKP('${i.kpLink}')">
 
         <div class="title">${i.title}</div>
 
@@ -265,79 +253,66 @@ function render(){
 }
 
 
-// TOP
-function loadTop(){
+// OPEN KP FROM POSTER
+function openKP(kpLink){
 
-  db.collection("clicks").onSnapshot(snap=>{
+  if(!kpLink){
+    kpLink="https://www.kinopoisk.ru/";
+  }
 
-    let arr=[];
-    snap.forEach(d=>arr.push(d.data()));
-
-    arr.sort((a,b)=>(b.count||0)-(a.count||0));
-    arr = arr.slice(0,5);
-
-    const box=document.getElementById("top");
-    box.innerHTML="";
-
-    arr.forEach((i,index)=>{
-
-      box.innerHTML+=`
-        <div class="top" onclick="goTo('${i.title}')">
-          <div>${index+1}. ${i.title}</div>
-          <div>🔥 ${i.count||0}</div>
-        </div>
-      `;
-    });
-
-  });
+  window.open(kpLink, "_blank");
 }
 
 
-// GO TO + HIGHLIGHT
+// TOP
+db.collection("clicks").onSnapshot(snap=>{
+
+  let arr=[];
+
+  snap.forEach(d=>arr.push(d.data()));
+
+  arr.sort((a,b)=>(b.count||0)-(a.count||0));
+  arr=arr.slice(0,5);
+
+  const box=document.getElementById("top");
+  box.innerHTML="";
+
+  arr.forEach((i,index)=>{
+
+    box.innerHTML+=`
+      <div class="top" onclick="goTo('${i.title}')">
+        <div>${index+1}. ${i.title}</div>
+        <div>🔥 ${i.count||0}</div>
+      </div>
+    `;
+  });
+
+});
+
+
+// GO TO
 function goTo(title){
 
-  const cards=document.querySelectorAll(".card");
-
-  cards.forEach(c=>{
+  document.querySelectorAll(".card").forEach(c=>{
     if(c.innerText.includes(title)){
       c.scrollIntoView({behavior:"smooth",block:"center"});
-
       c.classList.add("highlight");
 
-      setTimeout(()=>{
-        c.classList.remove("highlight");
-      },2500);
+      setTimeout(()=>c.classList.remove("highlight"),2500);
     }
   });
 }
 
 
-// MODAL (KP FIX)
-function openModal(title,poster,kpLink){
-
-  if(!kpLink || kpLink.includes("tuz3000.github.io")){
-    kpLink = "https://www.kinopoisk.ru/";
-  }
-
-  document.getElementById("modal").style.display="block";
-
-  document.getElementById("modalContent").innerHTML=`
-    <h3>${title}</h3>
-    <img src="${poster}">
-    <a href="${kpLink}" target="_blank">
-      Открыть на Кинопоиске
-    </a>
-  `;
-}
-
-function closeModal(){
-  document.getElementById("modal").style.display="none";
-}
-
-
-// TOP
+// SCROLL TOP
 function scrollTopPage(){
   window.scrollTo({top:0,behavior:"smooth"});
+}
+
+
+// CLOSE MODAL
+function closeModal(){
+  document.getElementById("modal").style.display="none";
 }
 
 </script>
