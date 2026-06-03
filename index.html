@@ -245,9 +245,20 @@ function render(list){
 // ПОПУЛЯРНОЕ
 function loadPopular(){
 
-  db.collection("clicks")
-  .get()
-  .then(snap=>{
+db.collection("clicks")
+.onSnapshot(snap => {
+
+  let arr = [];
+
+  snap.forEach(doc => {
+    arr.push(doc.data());
+  });
+
+  arr.sort((a,b)=>(b.count||0)-(a.count||0));
+  arr = arr.slice(0,5);
+
+  renderPopular(arr);
+});
 
     let arr=[];
 
