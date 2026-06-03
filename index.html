@@ -96,7 +96,6 @@ body{
 
 <div class="counter" id="counter">Загрузка...</div>
 
-<!-- 🔥 TOP -->
 <div class="section">🔥 ТОП 5 популярных</div>
 <div id="popular"></div>
 
@@ -155,7 +154,7 @@ function trackEvent(type,data=""){
 }
 
 
-// ================= CLICK (NETFLIX STYLE COUNT) =================
+// ================= CLICK (NETFLIX STYLE) =================
 function trackClick(title){
 
   const ref = db.collection("clicks").doc(title);
@@ -170,7 +169,7 @@ function trackClick(title){
 }
 
 
-// ================= LOAD SERIALS =================
+// ================= LOAD DATA =================
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
@@ -197,6 +196,7 @@ fetch(SHEET)
   "🎬 Всего сериалов: " + allData.length;
 
   render(allData);
+  loadPopular();
 
   trackEvent("open_app");
 });
@@ -230,36 +230,38 @@ function render(list){
 }
 
 
-// ================= NETFLIX TOP (REAL-TIME) =================
-db.collection("clicks").onSnapshot(snap=>{
+// ================= TOP 5 (REALTIME) =================
+function loadPopular(){
 
-  let arr=[];
+  db.collection("clicks").onSnapshot(snap=>{
 
-  snap.forEach(d=>{
-    arr.push(d.data());
-  });
+    let arr=[];
 
-  arr.sort((a,b)=>(b.count||0)-(a.count||0));
+    snap.forEach(d=>{
+      arr.push(d.data());
+    });
 
-  arr = arr.slice(0,5);
+    arr.sort((a,b)=>(b.count||0)-(a.count||0));
 
-  const box=document.getElementById("popular");
-  box.innerHTML="";
+    arr = arr.slice(0,5);
 
-  arr.forEach((i,index)=>{
+    const box=document.getElementById("popular");
+    box.innerHTML="";
 
-    box.innerHTML+=`
+    arr.forEach((i,index)=>{
+
+      box.innerHTML+=`
       <div class="pop-item"
         onclick="scrollToItem('${i.title.toLowerCase()}')">
 
         <div>${index+1}. ${i.title}</div>
         <div>🔥 ${i.count||0}</div>
 
-      </div>
-    `;
-  });
+      </div>`;
+    });
 
-});
+  });
+}
 
 
 // ================= SCROLL =================
@@ -274,13 +276,6 @@ function scrollToItem(title){
   });
 
 }
-
-
-// ================= AUTO SEARCH =================
-document.getElementById("search")?.addEventListener?.("input",e=>{
-  const q=e.target.value.toLowerCase();
-  render(allData.filter(i=>i.title.toLowerCase().includes(q)));
-});
 
 </script>
 
