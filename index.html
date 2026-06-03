@@ -22,8 +22,8 @@ body{
 .header{
   padding:16px;
   background:#111;
-  font-size:18px;
   font-weight:800;
+  font-size:18px;
 }
 
 .counter{
@@ -33,7 +33,6 @@ body{
 
 .section{
   padding:14px;
-  font-size:16px;
   font-weight:800;
   color:#3aa0ff;
 }
@@ -73,9 +72,10 @@ body{
   border-radius:8px;
   font-size:12px;
   text-decoration:none;
+  cursor:pointer;
 }
 
-/* POPULAR */
+/* TOP */
 .pop-item{
   display:flex;
   justify-content:space-between;
@@ -90,9 +90,7 @@ body{
 
 <body>
 
-<div class="header">
-Каталог сериалов @Art_aTV
-</div>
+<div class="header">Каталог сериалов @Art_aTV</div>
 
 <div class="counter" id="counter">Загрузка...</div>
 
@@ -123,30 +121,15 @@ let tg = window.Telegram?.WebApp;
 tg?.expand();
 
 const user = {
-  id: tg?.initDataUnsafe?.user?.id || "no_telegram",
-  username: tg?.initDataUnsafe?.user?.username || "no_username"
+  id: tg?.initDataUnsafe?.user?.id || "guest",
+  username: tg?.initDataUnsafe?.user?.username || "guest"
 };
-
-
-// ================= ONLINE =================
-const onlineRef = db.collection("online").doc(String(user.id));
-
-function setOnline(){
-  onlineRef.set({
-    username:user.username,
-    lastSeen:Date.now()
-  },{merge:true});
-}
-
-setOnline();
-setInterval(setOnline,30000);
 
 
 // ================= ANALYTICS =================
 function trackEvent(type,data=""){
   db.collection("analytics").add({
     user_id:user.id,
-    username:user.username,
     type,
     data,
     time:Date.now()
@@ -154,15 +137,14 @@ function trackEvent(type,data=""){
 }
 
 
-// ================= CLICK (NETFLIX STYLE) =================
+// ================= CLICK SYSTEM (NETFLIX STYLE) =================
 function trackClick(title){
 
   const ref = db.collection("clicks").doc(title);
 
   ref.set({
     title:title,
-    count:firebase.firestore.FieldValue.increment(1),
-    time:Date.now()
+    count:firebase.firestore.FieldValue.increment(1)
   },{merge:true});
 
   trackEvent("click",title);
@@ -181,7 +163,7 @@ fetch(SHEET)
 
   const rows=t.trim().split("\n").slice(1);
 
-  allData=rows.map(r=>{
+  allData = rows.map(r=>{
     const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
 
     return{
@@ -204,6 +186,7 @@ fetch(SHEET)
 
 // ================= RENDER =================
 function render(list){
+
   const box=document.getElementById("list");
   box.innerHTML="";
 
@@ -222,7 +205,7 @@ function render(list){
         href="${i.link}"
         target="_blank"
         onclick="trackClick('${i.title}')">
-        Оформить
+        Смотреть
       </a>
 
     </div>`;
@@ -230,16 +213,14 @@ function render(list){
 }
 
 
-// ================= TOP 5 (REALTIME) =================
+// ================= TOP 5 REALTIME =================
 function loadPopular(){
 
   db.collection("clicks").onSnapshot(snap=>{
 
     let arr=[];
 
-    snap.forEach(d=>{
-      arr.push(d.data());
-    });
+    snap.forEach(d=>arr.push(d.data()));
 
     arr.sort((a,b)=>(b.count||0)-(a.count||0));
 
