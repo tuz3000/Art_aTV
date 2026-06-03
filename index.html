@@ -20,45 +20,42 @@ input {
   border:none;
 }
 
-.container {
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+.list {
+  display:flex;
+  flex-direction:column;
   gap:10px;
   padding:10px;
 }
 
-.card {
+.item {
+  display:flex;
+  align-items:center;
+  gap:15px;
   background:#222;
-  border-radius:12px;
-  overflow:hidden;
-  cursor:pointer;
-  transition:0.2s;
+  padding:10px;
+  border-radius:10px;
 }
 
-.card:hover {
-  transform:scale(1.03);
-}
-
-.card img {
-  width:100%;
-  height:220px;
+.item img {
+  width:60px;
+  height:90px;
   object-fit:cover;
+  border-radius:6px;
 }
 
-.card h3 {
+.title {
+  flex:1;
   font-size:14px;
-  margin:6px;
 }
 
-.card p {
-  font-size:12px;
-  margin:6px;
-  color:#aaa;
-}
-
-a {
-  color:#4da3ff;
+.btn {
+  background:#4da3ff;
+  color:white;
+  padding:6px 10px;
+  border-radius:6px;
   text-decoration:none;
+  font-size:12px;
+  white-space:nowrap;
 }
 </style>
 </head>
@@ -67,7 +64,7 @@ a {
 
 <input id="search" placeholder="Поиск сериалов...">
 
-<div class="container" id="list"></div>
+<div class="list" id="list"></div>
 
 <script>
 
@@ -76,21 +73,18 @@ const SHEET_URL = "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGT
 let data = [];
 
 fetch(SHEET_URL)
-.then(res => res.text())
-.then(text => {
+.then(r => r.text())
+.then(t => {
 
-    const rows = text.trim().split("\n").slice(1);
+    const rows = t.trim().split("\n").slice(1);
 
-    data = rows.map(row => {
-
-        // умный парсинг (НЕ ломается от запятых в описании)
-        const cols = row.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+    data = rows.map(r => {
+        const cols = r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
 
         return {
             poster: cols[0],
             title: cols[1],
-            link: cols[2],
-            desc: cols.slice(3).join(",")
+            link: cols[2]
         };
     });
 
@@ -105,10 +99,10 @@ function render(list){
         if(!i.title) return;
 
         box.innerHTML += `
-        <div class="card" onclick="window.open('${i.link}','_blank')">
+        <div class="item">
             <img src="${i.poster}">
-            <h3>${i.title}</h3>
-            <p><a href="${i.desc}" target="_blank">Открыть Kinopoisk</a></p>
+            <div class="title">${i.title}</div>
+            <a class="btn" href="${i.link}" target="_blank">Купить</a>
         </div>`;
     });
 }
