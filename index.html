@@ -38,6 +38,7 @@ body{
   text-decoration:none;
 }
 
+/* поддержка */
 .support{
   position:fixed;
   right:12px;
@@ -56,11 +57,13 @@ body{
   font-weight:600;
 }
 
+/* счётчик */
 .counter{
   padding:10px 16px;
   color:#aaa;
 }
 
+/* поиск */
 input{
   width:92%;
   margin:10px 4%;
@@ -71,12 +74,15 @@ input{
   color:white;
 }
 
+/* секции */
 .section{
-  padding:6px 12px;
+  padding:10px 12px;
   color:#3aa0ff;
   font-weight:700;
+  cursor:pointer;
 }
 
+/* список */
 .list{
   display:flex;
   flex-direction:column;
@@ -84,6 +90,7 @@ input{
   padding:10px;
 }
 
+/* карточка */
 .item{
   display:flex;
   align-items:center;
@@ -120,11 +127,12 @@ input{
 
 <body>
 
-<!-- ⚙️ ТЕХПОДДЕРЖКА (исправлено) -->
+<!-- ⚙️ ТЕХПОДДЕРЖКА -->
 <div class="support">
   <a href="https://t.me/Art_aTV_support_bot">⚙️ Техподдержка</a>
 </div>
 
+<!-- шапка -->
 <div class="header">
   <div class="brand">
     Каталог сериалов <a href="https://t.me/Art_aTV">@Art_aTV</a>
@@ -135,14 +143,24 @@ input{
 
 <input id="search" placeholder="Поиск сериалов...">
 
-<div class="section">🔥 Популярное</div>
-<div class="list" id="popular"></div>
+<!-- 🔥 ПОПУЛЯРНОЕ (РАСКРЫВАЮЩЕЕСЯ) -->
+<div class="section" onclick="togglePopular()">
+🔥 Популярное ⬇️
+</div>
 
-<div class="section">🎬 Все сериалы</div>
+<div id="popularWrap" style="display:none;">
+  <div class="list" id="popular"></div>
+</div>
+
+<div class="section">
+🎬 Все сериалы
+</div>
+
 <div class="list" id="list"></div>
 
 <script>
 
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
@@ -155,15 +173,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🔥 НОРМАЛИЗАЦИЯ НАЗВАНИЯ (УБИРАЕТ ДУБЛИ)
-function cleanTitle(title){
-  return title.trim().toLowerCase();
-}
-
-// 🔥 КЛИКИ (фикс дублей)
+// 🔥 КЛИКИ (1 сериал = 1 документ)
 function trackClick(title){
 
-  const key = cleanTitle(title);
+  const key = title.trim().toLowerCase();
 
   db.collection("clicks").doc(key).set({
     title: title,
@@ -203,7 +216,7 @@ fetch(SHEET)
   loadPopular();
 });
 
-// 🎬 ВСЕ
+// 🎬 ВСЕ СЕРИАЛЫ
 function render(list){
   const box=document.getElementById("list");
   box.innerHTML="";
@@ -229,7 +242,7 @@ function render(list){
   });
 }
 
-// 🔥 ПОПУЛЯРНОЕ (ТОП 5 + СОРТИРОВКА)
+// 🔥 ПОПУЛЯРНОЕ (ТОП 5)
 function loadPopular(){
 
   db.collection("clicks")
@@ -242,7 +255,7 @@ function loadPopular(){
       arr.push(doc.data());
     });
 
-    arr.sort((a,b)=> (b.count||0)-(a.count||0));
+    arr.sort((a,b)=>(b.count||0)-(a.count||0));
 
     arr = arr.slice(0,5);
 
@@ -264,6 +277,17 @@ function renderPopular(list){
       </div>
     </div>`;
   });
+}
+
+// 🔽 раскрытие / закрытие
+let openPopular=false;
+
+function togglePopular(){
+  openPopular=!openPopular;
+
+  const box=document.getElementById("popularWrap");
+
+  box.style.display = openPopular ? "block" : "none";
 }
 
 // 🔍 поиск
