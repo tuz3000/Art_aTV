@@ -2,12 +2,9 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Каталог @Art_aTV</title>
+<title>@Art_aTV</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
 body{
@@ -17,32 +14,62 @@ body{
   color:white;
 }
 
-/* HEADER */
+/* FIXED HEADER */
 .header{
-  padding:16px;
-  font-size:18px;
-  font-weight:800;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
   background:#111;
+  padding:12px 14px;
+  font-weight:900;
+  z-index:999;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 .header a{
   color:#3aa0ff;
   text-decoration:none;
+  font-weight:900;
 }
 
-/* SUPPORT */
+/* SEARCH */
+.search{
+  margin-top:60px;
+  padding:10px 12px;
+}
+
+.search input{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  outline:none;
+}
+
+/* SUPPORT FIXED */
 .support-btn{
   position:fixed;
-  top:12px;
-  right:12px;
+  top:10px;
+  right:10px;
   background:#2a2a2a;
-  color:#fff;
-  padding:10px 12px;
+  color:white;
+  padding:9px 12px;
   border-radius:10px;
   font-size:13px;
-  font-weight:800;
+  font-weight:900;
+  z-index:1000;
   cursor:pointer;
-  z-index:999;
+}
+
+/* SECTION */
+.section{
+  padding:12px;
+  font-weight:900;
+  color:#3aa0ff;
+  margin-top:10px;
 }
 
 /* TOP */
@@ -54,6 +81,11 @@ body{
   background:#1a1a22;
   border-radius:10px;
   cursor:pointer;
+}
+
+/* SPACE BETWEEN TOP & LIST */
+.spacer{
+  height:18px;
 }
 
 /* CARD */
@@ -94,52 +126,56 @@ body{
   white-space:nowrap;
 }
 
-/* UP */
-.up-btn{
-  position:fixed;
-  bottom:18px;
-  right:18px;
-  width:52px;
-  height:52px;
-  border-radius:50%;
-  background:rgba(255,255,255,0.08);
-  backdrop-filter: blur(10px);
-  border:1px solid rgba(255,255,255,0.15);
-  color:white;
-  font-size:20px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  z-index:999;
-}
-
 /* HIGHLIGHT */
 .highlight{
   border:2px solid #3aa0ff;
   box-shadow:0 0 20px rgba(58,160,255,0.6);
   transform:scale(1.02);
 }
+
+/* UP BUTTON */
+.up-btn{
+  position:fixed;
+  bottom:18px;
+  right:18px;
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.2);
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
-<div class="support-btn" onclick="window.open('https://t.me/Art_aTV_support_bot','_blank')">
-⚙️ Поддержка
-</div>
-
+<!-- FIXED HEADER -->
 <div class="header">
-Каталог <a href="https://t.me/Art_aTV" target="_blank">@Art_aTV</a>
+  <div>@Art_aTV</div>
+  <div class="support-btn" onclick="window.open('https://t.me/Art_aTV_support_bot','_blank')">
+    ⚙️ Поддержка
+  </div>
 </div>
 
+<!-- SEARCH -->
+<div class="search">
+  <input id="search" placeholder="Поиск сериалов..." oninput="render()">
+</div>
+
+<!-- TOP -->
 <div class="section">🔥 ТОП 5 популярных</div>
 <div id="top"></div>
 
+<div class="spacer"></div>
+
+<!-- LIST -->
 <div class="section">🎬 Все сериалы</div>
 <div id="list"></div>
 
-<div class="up-btn" onclick="scrollTopPage()">↑</div>
+<div class="up-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
 
 <script>
 
@@ -147,6 +183,13 @@ const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
 let data = [];
+
+// CLICK STORAGE
+let clicks = JSON.parse(localStorage.getItem("clicks") || "{}");
+
+function saveClicks(){
+  localStorage.setItem("clicks", JSON.stringify(clicks));
+}
 
 
 // ================= LOAD SHEET =================
@@ -168,16 +211,21 @@ fetch(SHEET)
   });
 
   render();
+  updateTop();
 });
 
 
-// ================= RENDER =================
+// ================= SEARCH + RENDER =================
 function render(){
+
+  const q = document.getElementById("search").value?.toLowerCase() || "";
 
   const box = document.getElementById("list");
   box.innerHTML = "";
 
-  data.forEach(i=>{
+  data
+  .filter(i=>i.title.toLowerCase().includes(q))
+  .forEach(i=>{
 
     box.innerHTML += `
       <div class="card">
@@ -188,9 +236,10 @@ function render(){
         <div class="title">${i.title}</div>
 
         <a class="btn"
-          href="${i.link}"
-          target="_blank">
-          Оформить доступ
+           href="${i.link}"
+           onclick="addClick('${i.title}')"
+           target="_blank">
+           Оформить доступ
         </a>
 
       </div>
@@ -199,37 +248,35 @@ function render(){
 }
 
 
-// ================= OPEN KP =================
-function openKP(link){
-
-  if(!link || link.length < 5){
-    link = "https://www.kinopoisk.ru/";
-  }
-
-  window.open(link, "_blank");
-}
-
-
-// ================= TOP (DEMO SIMPLE) =================
-function loadTop(){
+// ================= TOP 5 BY CLICKS =================
+function updateTop(){
 
   const box = document.getElementById("top");
-
-  const top5 = data.slice(0,5);
-
   box.innerHTML = "";
 
-  top5.forEach((i,index)=>{
+  const sorted = Object.entries(clicks)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,5);
+
+  sorted.forEach(([title,count],i)=>{
 
     box.innerHTML += `
-      <div class="top" onclick="goTo('${i.title}')">
-        <div>${index+1}. ${i.title}</div>
+      <div class="top" onclick="goTo('${title}')">
+        <div>${i+1}. ${title}</div>
+        <div>🔥 ${count}</div>
       </div>
     `;
   });
 }
 
-setTimeout(loadTop, 1000);
+
+// ================= CLICK SYSTEM =================
+function addClick(title){
+
+  clicks[title] = (clicks[title] || 0) + 1;
+  saveClicks();
+  updateTop();
+}
 
 
 // ================= GO TO =================
@@ -240,15 +287,17 @@ function goTo(title){
       c.scrollIntoView({behavior:"smooth",block:"center"});
       c.classList.add("highlight");
 
-      setTimeout(()=>c.classList.remove("highlight"),2500);
+      setTimeout(()=>c.classList.remove("highlight"),2000);
     }
   });
 }
 
 
-// ================= SCROLL =================
-function scrollTopPage(){
-  window.scrollTo({top:0,behavior:"smooth"});
+// ================= OPEN KP =================
+function openKP(link){
+
+  if(!link) link="https://www.kinopoisk.ru/";
+  window.open(link,"_blank");
 }
 
 </script>
