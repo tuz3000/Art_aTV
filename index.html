@@ -20,7 +20,7 @@ body{
 }
 
 .header{
-  padding:14px;
+  padding:16px;
   background:#111;
   font-size:18px;
   font-weight:800;
@@ -31,20 +31,11 @@ body{
   color:#aaa;
 }
 
-input{
-  width:92%;
-  margin:10px 4%;
-  padding:14px;
-  border-radius:12px;
-  border:none;
-  background:#1a1a1a;
-  color:white;
-}
-
 .section{
   padding:14px;
-  color:#3aa0ff;
+  font-size:16px;
   font-weight:800;
+  color:#3aa0ff;
 }
 
 .list{
@@ -85,17 +76,13 @@ input{
 }
 
 /* POPULAR */
-.popular{
-  padding:12px;
-}
-
 .pop-item{
-  padding:10px;
-  margin-bottom:8px;
-  background:#1a1a22;
-  border-radius:10px;
   display:flex;
   justify-content:space-between;
+  padding:10px;
+  margin:6px 12px;
+  background:#1a1a22;
+  border-radius:10px;
   cursor:pointer;
 }
 </style>
@@ -109,11 +96,9 @@ input{
 
 <div class="counter" id="counter">Загрузка...</div>
 
-<input id="search" placeholder="Поиск...">
-
-<!-- 🔥 POPULAR -->
-<div class="section">🔥 ТОП популярное</div>
-<div class="popular" id="popular"></div>
+<!-- 🔥 TOP -->
+<div class="section">🔥 ТОП 5 популярных</div>
+<div id="popular"></div>
 
 <div class="section">🎬 Все сериалы</div>
 <div class="list" id="list"></div>
@@ -170,7 +155,22 @@ function trackEvent(type,data=""){
 }
 
 
-// ================= DATA =================
+// ================= CLICK (NETFLIX STYLE COUNT) =================
+function trackClick(title){
+
+  const ref = db.collection("clicks").doc(title);
+
+  ref.set({
+    title:title,
+    count:firebase.firestore.FieldValue.increment(1),
+    time:Date.now()
+  },{merge:true});
+
+  trackEvent("click",title);
+}
+
+
+// ================= LOAD SERIALS =================
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
@@ -197,13 +197,12 @@ fetch(SHEET)
   "🎬 Всего сериалов: " + allData.length;
 
   render(allData);
-  loadPopular();
 
-  trackEvent("open");
+  trackEvent("open_app");
 });
 
 
-// ================= ALL =================
+// ================= RENDER =================
 function render(list){
   const box=document.getElementById("list");
   box.innerHTML="";
@@ -222,7 +221,7 @@ function render(list){
       <a class="btn"
         href="${i.link}"
         target="_blank"
-        onclick="trackEvent('click','${i.title}')">
+        onclick="trackClick('${i.title}')">
         Оформить
       </a>
 
@@ -231,36 +230,36 @@ function render(list){
 }
 
 
-// ================= POPULAR =================
-function loadPopular(){
+// ================= NETFLIX TOP (REAL-TIME) =================
+db.collection("clicks").onSnapshot(snap=>{
 
-  db.collection("clicks").onSnapshot(snap=>{
+  let arr=[];
 
-    let arr=[];
+  snap.forEach(d=>{
+    arr.push(d.data());
+  });
 
-    snap.forEach(d=>arr.push(d.data()));
+  arr.sort((a,b)=>(b.count||0)-(a.count||0));
 
-    arr.sort((a,b)=>(b.count||0)-(a.count||0));
+  arr = arr.slice(0,5);
 
-    arr = arr.slice(0,5);
+  const box=document.getElementById("popular");
+  box.innerHTML="";
 
-    const box=document.getElementById("popular");
-    box.innerHTML="";
+  arr.forEach((i,index)=>{
 
-    arr.forEach((i,index)=>{
-
-      box.innerHTML+=`
+    box.innerHTML+=`
       <div class="pop-item"
         onclick="scrollToItem('${i.title.toLowerCase()}')">
 
         <div>${index+1}. ${i.title}</div>
         <div>🔥 ${i.count||0}</div>
 
-      </div>`;
-    });
-
+      </div>
+    `;
   });
-}
+
+});
 
 
 // ================= SCROLL =================
@@ -273,16 +272,14 @@ function scrollToItem(title){
       el.scrollIntoView({behavior:"smooth",block:"center"});
     }
   });
+
 }
 
 
-// ================= SEARCH =================
-document.getElementById("search").addEventListener("input",e=>{
+// ================= AUTO SEARCH =================
+document.getElementById("search")?.addEventListener?.("input",e=>{
   const q=e.target.value.toLowerCase();
-
-  render(allData.filter(i=>
-    i.title.toLowerCase().includes(q)
-  ));
+  render(allData.filter(i=>i.title.toLowerCase().includes(q)));
 });
 
 </script>
