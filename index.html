@@ -17,6 +17,7 @@ body{
   color:white;
 }
 
+/* HEADER */
 .header{
   padding:16px;
   font-size:18px;
@@ -29,6 +30,7 @@ body{
   text-decoration:none;
 }
 
+/* SUPPORT */
 .support-btn{
   position:fixed;
   top:12px;
@@ -42,45 +44,7 @@ body{
   z-index:999;
 }
 
-.section{
-  padding:12px;
-  color:#3aa0ff;
-  font-weight:800;
-}
-
-.card{
-  display:flex;
-  gap:12px;
-  padding:12px;
-  margin:10px 12px;
-  background:#15151c;
-  border-radius:12px;
-}
-
-.card img{
-  width:80px;
-  height:110px;
-  object-fit:cover;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.title{
-  font-weight:800;
-  font-size:18px;
-}
-
-.btn{
-  margin-left:auto;
-  align-self:center;
-  padding:8px 12px;
-  background:#3aa0ff;
-  color:white;
-  border-radius:8px;
-  font-size:12px;
-  text-decoration:none;
-}
-
+/* TOP */
 .top{
   display:flex;
   justify-content:space-between;
@@ -91,12 +55,58 @@ body{
   cursor:pointer;
 }
 
+/* CARD */
+.card{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px;
+  margin:10px 12px;
+  background:#15151c;
+  border-radius:12px;
+}
+
+/* POSTER */
+.card img{
+  width:70px;
+  height:100px;
+  object-fit:cover;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+/* TITLE (ЦЕНТР + АВТО SIZE) */
+.title{
+  flex:1;
+  text-align:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  font-size:clamp(12px, 2.2vw, 18px);
+  padding:0 10px;
+}
+
+/* BUTTON */
+.btn{
+  background:#3aa0ff;
+  padding:8px 10px;
+  border-radius:8px;
+  font-size:12px;
+  color:white;
+  text-decoration:none;
+  white-space:nowrap;
+}
+
+/* HIGHLIGHT */
 .highlight{
   border:2px solid #3aa0ff;
   box-shadow:0 0 20px rgba(58,160,255,0.6);
   transform:scale(1.02);
 }
 
+/* UP */
 .up-btn{
   position:fixed;
   bottom:18px;
@@ -116,6 +126,7 @@ body{
   z-index:999;
 }
 
+/* MODAL */
 .modal{
   display:none;
   position:fixed;
@@ -190,7 +201,6 @@ const db = firebase.firestore();
 // CLICK
 function trackClick(title){
   const ref = db.collection("clicks").doc(title);
-
   ref.set({
     title:title,
     count:firebase.firestore.FieldValue.increment(1)
@@ -212,11 +222,10 @@ fetch(SHEET).then(r=>r.text()).then(t=>{
     const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
 
     return{
-      title:(c[0]||"").trim(),
-      link:(c[1]||"").trim(),
-      poster:(c[2]||"").trim(),
-      kp:(c[3]||"").trim(),
-      kpLink:(c[4]||"").trim()   // ✅ ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ
+      title:c[0] || "",
+      link:c[1] || "",
+      poster:c[2] || "",
+      kpLink:c[3] || ""   // ⚠️ ВАЖНО: Кинопоиск СЮДА
     };
   });
 
@@ -233,15 +242,15 @@ function render(){
 
   data.forEach(i=>{
 
+    const safeTitle = i.title.replaceAll(" ","_");
+
     box.innerHTML+=`
       <div class="card">
 
         <img src="${i.poster}"
           onclick="openModal('${i.title}','${i.poster}','${i.kpLink}')">
 
-        <div style="flex:1">
-          <div class="title">${i.title}</div>
-        </div>
+        <div class="title">${i.title}</div>
 
         <a class="btn"
           href="${i.link}"
@@ -265,7 +274,7 @@ function loadTop(){
     snap.forEach(d=>arr.push(d.data()));
 
     arr.sort((a,b)=>(b.count||0)-(a.count||0));
-    arr=arr.slice(0,5);
+    arr = arr.slice(0,5);
 
     const box=document.getElementById("top");
     box.innerHTML="";
@@ -284,8 +293,31 @@ function loadTop(){
 }
 
 
-// MODAL
+// GO TO + HIGHLIGHT
+function goTo(title){
+
+  const cards=document.querySelectorAll(".card");
+
+  cards.forEach(c=>{
+    if(c.innerText.includes(title)){
+      c.scrollIntoView({behavior:"smooth",block:"center"});
+
+      c.classList.add("highlight");
+
+      setTimeout(()=>{
+        c.classList.remove("highlight");
+      },2500);
+    }
+  });
+}
+
+
+// MODAL (KP FIX)
 function openModal(title,poster,kpLink){
+
+  if(!kpLink || kpLink.includes("tuz3000.github.io")){
+    kpLink = "https://www.kinopoisk.ru/";
+  }
 
   document.getElementById("modal").style.display="block";
 
@@ -303,7 +335,7 @@ function closeModal(){
 }
 
 
-// SCROLL TOP
+// TOP
 function scrollTopPage(){
   window.scrollTo({top:0,behavior:"smooth"});
 }
