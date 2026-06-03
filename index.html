@@ -18,7 +18,7 @@ body {
   color:white;
 }
 
-/* шапка */
+/* ШАПКА */
 .header {
   padding:14px 16px;
   background:#111;
@@ -40,34 +40,33 @@ body {
   text-decoration:none;
 }
 
-/* поддержка */
+/* ПОДДЕРЖКА (СЕРЫЙ ВЕРХ СПРАВА) */
 .support {
   position:fixed;
   right:12px;
-  top:80px;
+  top:14px;
   z-index:999;
 }
 
 .support a {
   display:block;
-  background:#3aa0ff;
-  color:white;
-  padding:10px 12px;
-  border-radius:12px;
+  background:#2b2b2b;
+  color:#ddd;
+  padding:8px 10px;
+  border-radius:10px;
   text-decoration:none;
-  font-size:13px;
+  font-size:12px;
   font-weight:600;
-  box-shadow:0 6px 14px rgba(58,160,255,0.35);
 }
 
-/* счётчик */
+/* СЧЁТЧИК */
 .counter {
   padding:10px 16px;
   font-size:14px;
   color:#aaa;
 }
 
-/* поиск */
+/* ПОИСК */
 input {
   width:92%;
   margin:10px 4%;
@@ -79,7 +78,15 @@ input {
   font-size:16px;
 }
 
-/* список */
+/* БЛОКИ */
+.section-title {
+  padding:10px 16px 0;
+  font-size:14px;
+  color:#3aa0ff;
+  font-weight:700;
+}
+
+/* СПИСОК */
 .list {
   display:flex;
   flex-direction:column;
@@ -87,7 +94,7 @@ input {
   padding:10px;
 }
 
-/* карточка */
+/* КАРТОЧКА */
 .item {
   display:flex;
   align-items:center;
@@ -98,7 +105,7 @@ input {
   min-height:120px;
 }
 
-/* постер */
+/* ПОСТЕР */
 .poster {
   width:80px;
   height:120px;
@@ -107,14 +114,14 @@ input {
   cursor:pointer;
 }
 
-/* название */
+/* НАЗВАНИЕ */
 .title {
   flex:1;
   font-size:16px;
   font-weight:700;
 }
 
-/* кнопка */
+/* КНОПКА */
 .btn {
   background:#3aa0ff;
   color:white;
@@ -154,13 +161,6 @@ input {
 
 <body>
 
-<!-- ШАПКА -->
-<div class="header">
-  <div class="brand">
-    Каталог сериалов <a href="https://t.me/Art_aTV" target="_blank">@Art_aTV</a>
-  </div>
-</div>
-
 <!-- ПОДДЕРЖКА -->
 <div class="support">
   <a href="https://t.me/Art_aTV_support_bot" target="_blank">
@@ -168,16 +168,26 @@ input {
   </a>
 </div>
 
-<!-- СЧЁТЧИК -->
+<!-- ШАПКА -->
+<div class="header">
+  <div class="brand">
+    Каталог сериалов <a href="https://t.me/Art_aTV" target="_blank">@Art_aTV</a>
+  </div>
+</div>
+
 <div class="counter" id="counter">Загрузка...</div>
 
-<!-- ПОИСК -->
 <input id="search" placeholder="Поиск сериалов...">
 
+<div class="section-title">🔥 Популярное</div>
+<div class="list" id="popular"></div>
+
+<div class="section-title">🎬 Все сериалы</div>
 <div class="list" id="list"></div>
 
 <script>
-// Firebase config
+
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
@@ -190,7 +200,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// счётчик кликов
 function trackClick(title) {
   db.collection("clicks").doc(title).set({
     title: title,
@@ -223,44 +232,76 @@ fetch(SHEET)
     document.getElementById("counter").innerText =
       "🎬 Всего сериалов: " + allData.length;
 
-    render(allData);
+    loadPopular();
+    renderAll(allData);
 });
 
-function render(list){
-    const box = document.getElementById("list");
-    box.innerHTML = "";
+// загрузка популярного
+function loadPopular() {
+  db.collection("clicks").get().then(snapshot => {
 
-    list.forEach(i => {
-        if(!i.title) return;
+    let stats = [];
 
-        box.innerHTML += `
-        <div class="item">
-
-            <img class="poster"
-                 src="${i.poster}"
-                 onclick="window.open('${i.kp}','_blank')">
-
-            <div class="title">${i.title}</div>
-
-            <a class="btn"
-               href="${i.link}"
-               target="_blank"
-               onclick="trackClick('${i.title}')"
-               rel="noopener noreferrer">
-               Оформить доступ
-            </a>
-
-        </div>`;
+    snapshot.forEach(doc => {
+      stats.push(doc.data());
     });
+
+    stats.sort((a,b) => (b.count || 0) - (a.count || 0));
+
+    let popularTitles = stats.slice(0, 5).map(x => x.title);
+
+    let popular = allData.filter(i =>
+      popularTitles.includes(i.title)
+    );
+
+    renderPopular(popular);
+  });
+}
+
+function renderPopular(list){
+  const box = document.getElementById("popular");
+  box.innerHTML = "";
+  list.forEach(i => addCard(i, box));
+}
+
+function renderAll(list){
+  const box = document.getElementById("list");
+  box.innerHTML = "";
+  list.forEach(i => addCard(i, box));
+}
+
+function addCard(i, box){
+  if(!i.title) return;
+
+  box.innerHTML += `
+  <div class="item">
+
+    <img class="poster"
+         src="${i.poster}"
+         onclick="window.open('${i.kp}','_blank')">
+
+    <div class="title">${i.title}</div>
+
+    <a class="btn"
+       href="${i.link}"
+       target="_blank"
+       onclick="trackClick('${i.title}')"
+       rel="noopener noreferrer">
+       Оформить доступ
+    </a>
+
+  </div>`;
 }
 
 // поиск
 document.getElementById("search").addEventListener("input", e => {
-    const q = e.target.value.toLowerCase();
-    render(allData.filter(i =>
-        (i.title || "").toLowerCase().includes(q)
-    ));
+  const q = e.target.value.toLowerCase();
+
+  renderAll(allData.filter(i =>
+    (i.title || "").toLowerCase().includes(q)
+  ));
 });
+
 </script>
 
 </body>
