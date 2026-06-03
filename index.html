@@ -6,65 +6,89 @@
 
 <style>
 body {
-  margin:0;
+  margin: 0;
   font-family: Arial;
-  background:#111;
-  color:white;
+  background: #000;
+  color: white;
 }
 
+/* верхняя панель */
+.header {
+  padding: 15px 20px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #e50914;
+}
+
+/* поиск */
 input {
-  width:90%;
-  padding:10px;
-  margin:15px;
-  border-radius:8px;
-  border:none;
+  width: 92%;
+  margin: 10px 4%;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  outline: none;
 }
 
-.list {
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  padding:10px;
+/* ряд как в Netflix */
+.row {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+  padding: 15px;
 }
 
-.item {
-  display:flex;
-  align-items:center;
-  gap:15px;
-  background:#222;
-  padding:10px;
-  border-radius:10px;
+/* скрыть скролл */
+.row::-webkit-scrollbar {
+  display: none;
 }
 
-.item img {
-  width:60px;
-  height:90px;
-  object-fit:cover;
-  border-radius:6px;
+/* карточка */
+.card {
+  min-width: 140px;
+  background: #111;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.08);
+}
+
+.card img {
+  width: 140px;
+  height: 200px;
+  object-fit: cover;
 }
 
 .title {
-  flex:1;
-  font-size:14px;
+  font-size: 12px;
+  padding: 6px;
+  text-align: center;
 }
 
+/* кнопка */
 .btn {
-  background:#4da3ff;
-  color:white;
-  padding:6px 10px;
-  border-radius:6px;
-  text-decoration:none;
-  font-size:12px;
-  white-space:nowrap;
+  display: block;
+  text-align: center;
+  background: #e50914;
+  color: white;
+  padding: 6px;
+  font-size: 11px;
+  text-decoration: none;
 }
 </style>
 </head>
 
 <body>
 
+<div class="header">NETFLIX STYLE CATALOG</div>
+
 <input id="search" placeholder="Поиск сериалов...">
 
-<div class="list" id="list"></div>
+<div class="row" id="list"></div>
 
 <script>
 
@@ -99,10 +123,12 @@ function render(list){
         if(!i.title) return;
 
         box.innerHTML += `
-        <div class="item">
+        <div class="card">
             <img src="${i.poster}">
             <div class="title">${i.title}</div>
-            <a class="btn" href="${i.link}" target="_blank">Купить</a>
+            <a class="btn" href="${i.link}" target="_blank" rel="noopener noreferrer">
+                СМОТРЕТЬ
+            </a>
         </div>`;
     });
 }
