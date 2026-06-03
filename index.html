@@ -6,6 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <style>
 body {
   margin:0;
@@ -14,19 +18,18 @@ body {
   color:white;
 }
 
-/* ШАПКА */
+/* шапка */
 .header {
   padding:14px 16px;
   background:#111;
   display:flex;
-  align-items:center;
   justify-content:space-between;
+  align-items:center;
   position:sticky;
   top:0;
   z-index:10;
 }
 
-/* БОЛЬШОЙ ЗАГОЛОВОК */
 .brand {
   font-size:20px;
   font-weight:800;
@@ -37,15 +40,15 @@ body {
   text-decoration:none;
 }
 
-/* ПОДДЕРЖКА СПРАВА (ПЛАВАЮЩАЯ КНОПКА) */
-.support-float {
+/* поддержка */
+.support {
   position:fixed;
   right:12px;
   top:80px;
   z-index:999;
 }
 
-.support-float a {
+.support a {
   display:block;
   background:#3aa0ff;
   color:white;
@@ -57,14 +60,14 @@ body {
   box-shadow:0 6px 14px rgba(58,160,255,0.35);
 }
 
-/* СЧЁТЧИК */
+/* счётчик */
 .counter {
   padding:10px 16px;
   font-size:14px;
   color:#aaa;
 }
 
-/* ПОИСК */
+/* поиск */
 input {
   width:92%;
   margin:10px 4%;
@@ -76,7 +79,7 @@ input {
   font-size:16px;
 }
 
-/* СПИСОК */
+/* список */
 .list {
   display:flex;
   flex-direction:column;
@@ -84,7 +87,7 @@ input {
   padding:10px;
 }
 
-/* КАРТОЧКА */
+/* карточка */
 .item {
   display:flex;
   align-items:center;
@@ -95,7 +98,7 @@ input {
   min-height:120px;
 }
 
-/* ПОСТЕР */
+/* постер */
 .poster {
   width:80px;
   height:120px;
@@ -104,14 +107,14 @@ input {
   cursor:pointer;
 }
 
-/* НАЗВАНИЕ */
+/* название */
 .title {
   flex:1;
   font-size:16px;
   font-weight:700;
 }
 
-/* КНОПКА */
+/* кнопка */
 .btn {
   background:#3aa0ff;
   color:white;
@@ -127,7 +130,6 @@ input {
   transform:scale(0.95);
 }
 
-/* мобилка */
 @media (max-width: 500px) {
   .brand {
     font-size:18px;
@@ -146,10 +148,6 @@ input {
     font-size:12px;
     padding:8px 10px;
   }
-
-  .support-float {
-    top:70px;
-  }
 }
 </style>
 </head>
@@ -163,8 +161,8 @@ input {
   </div>
 </div>
 
-<!-- ПОДДЕРЖКА СПРАВА -->
-<div class="support-float">
+<!-- ПОДДЕРЖКА -->
+<div class="support">
   <a href="https://t.me/Art_aTV_support_bot" target="_blank">
     ⚙️ Поддержка
   </a>
@@ -179,6 +177,26 @@ input {
 <div class="list" id="list"></div>
 
 <script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
+  authDomain: "art-atv.firebaseapp.com",
+  projectId: "art-atv",
+  storageBucket: "art-atv.firebasestorage.app",
+  messagingSenderId: "549965698241",
+  appId: "1:549965698241:web:86cfa4dc6048d48d4ef040"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// счётчик кликов
+function trackClick(title) {
+  db.collection("clicks").doc(title).set({
+    title: title,
+    count: firebase.firestore.FieldValue.increment(1)
+  }, { merge: true });
+}
 
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
@@ -227,6 +245,7 @@ function render(list){
             <a class="btn"
                href="${i.link}"
                target="_blank"
+               onclick="trackClick('${i.title}')"
                rel="noopener noreferrer">
                Оформить доступ
             </a>
@@ -235,14 +254,13 @@ function render(list){
     });
 }
 
-/* поиск */
+// поиск
 document.getElementById("search").addEventListener("input", e => {
     const q = e.target.value.toLowerCase();
     render(allData.filter(i =>
         (i.title || "").toLowerCase().includes(q)
     ));
 });
-
 </script>
 
 </body>
