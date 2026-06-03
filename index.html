@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Каталог сериалов Art_aTV</title>
+<title>Каталог сериалов @Art_aTV</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -14,7 +14,7 @@ body {
   color:white;
 }
 
-/* верхняя панель */
+/* шапка */
 .header {
   padding:14px 16px;
   display:flex;
@@ -24,10 +24,15 @@ body {
   font-weight:700;
 }
 
-/* название */
+/* бренд */
 .brand {
   font-size:16px;
-  color:#ffffff;
+}
+
+/* ссылка на канал */
+.brand a {
+  color:#3aa0ff;
+  text-decoration:none;
 }
 
 /* техподдержка */
@@ -133,13 +138,17 @@ input {
 
 <!-- ШАПКА -->
 <div class="header">
-  <div class="brand">Каталог сериалов Art_aTV</div>
+
+  <div class="brand">
+    Каталог сериалов <a href="https://t.me/Art_aTV" target="_blank">@Art_aTV</a>
+  </div>
 
   <div class="support">
     <a href="https://t.me/Art_aTV_support_bot" target="_blank">
       Техподдержка
     </a>
   </div>
+
 </div>
 
 <input id="search" placeholder="Поиск сериалов...">
