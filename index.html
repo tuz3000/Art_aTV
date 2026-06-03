@@ -14,121 +14,149 @@ body {
   color:white;
 }
 
-/* шапка */
+/* ШАПКА */
 .header {
-  padding:14px 16px;
+  padding:12px 16px;
   display:flex;
   justify-content:space-between;
   align-items:center;
   background:#111;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+.brand {
+  font-size:15px;
   font-weight:700;
 }
 
-/* бренд */
-.brand {
-  font-size:16px;
-}
-
-/* ссылка на канал */
 .brand a {
   color:#3aa0ff;
   text-decoration:none;
 }
 
-/* техподдержка */
-.support a {
-  color:#3aa0ff;
-  text-decoration:none;
-  font-size:13px;
+/* КНОПКА ПОДДЕРЖКИ (ЗАКРЕПЛЕНА) */
+.support-fixed {
+  position:sticky;
+  top:48px;
+  z-index:10;
+  background:#0b0b0f;
+  padding:10px 16px;
 }
 
-/* поиск */
+.support-fixed a {
+  display:inline-block;
+  background:#3aa0ff;
+  color:white;
+  padding:10px 12px;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:13px;
+  font-weight:600;
+}
+
+/* СЧЁТЧИК */
+.counter {
+  padding:10px 16px;
+  font-size:14px;
+  color:#aaa;
+}
+
+/* БЫСТРЫЕ БУКВЫ */
+.letters {
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  padding:10px 16px;
+}
+
+.letters button {
+  background:#1a1a1a;
+  color:white;
+  border:none;
+  padding:6px 8px;
+  border-radius:6px;
+  font-size:12px;
+}
+
+/* ПОИСК */
 input {
   width:92%;
-  margin:14px 4%;
-  padding:16px;
-  border-radius:14px;
+  margin:10px 4%;
+  padding:14px;
+  border-radius:12px;
   border:none;
   background:#1a1a1a;
   color:white;
-  font-size:17px;
+  font-size:16px;
 }
 
-/* список */
+/* СПИСОК */
 .list {
   display:flex;
   flex-direction:column;
-  gap:14px;
-  padding:12px;
+  gap:12px;
+  padding:10px;
 }
 
-/* карточка */
+/* КАРТОЧКА */
 .item {
   display:flex;
   align-items:center;
-  gap:16px;
+  gap:14px;
   background:#15151c;
-  padding:14px;
-  border-radius:16px;
-  min-height:130px;
+  padding:12px;
+  border-radius:14px;
+  min-height:120px;
 }
 
-/* постер */
+/* ПОСТЕР */
 .poster {
-  width:95px;
-  height:140px;
+  width:80px;
+  height:120px;
   object-fit:cover;
-  border-radius:10px;
+  border-radius:8px;
   cursor:pointer;
-  flex-shrink:0;
 }
 
-/* название */
+/* НАЗВАНИЕ */
 .title {
   flex:1;
-  font-size:18px;
+  font-size:16px;
   font-weight:700;
-  line-height:1.2;
 }
 
-/* кнопка */
+/* КНОПКА */
 .btn {
   background:#3aa0ff;
   color:white;
-  padding:12px 14px;
-  border-radius:12px;
-  font-size:14px;
+  padding:10px 12px;
+  border-radius:10px;
+  font-size:13px;
   font-weight:600;
   text-decoration:none;
   white-space:nowrap;
-  flex-shrink:0;
-  box-shadow:0 6px 14px rgba(58,160,255,0.35);
 }
 
 .btn:active {
   transform:scale(0.95);
 }
 
-/* адаптация */
+/* мобилка */
 @media (max-width: 500px) {
-
-  .item {
-    min-height:125px;
-    padding:12px;
-  }
-
   .poster {
-    width:85px;
-    height:125px;
+    width:70px;
+    height:105px;
   }
 
   .title {
-    font-size:17px;
+    font-size:15px;
   }
 
   .btn {
-    font-size:13px;
-    padding:10px 12px;
+    font-size:12px;
+    padding:8px 10px;
   }
 }
 </style>
@@ -138,19 +166,23 @@ input {
 
 <!-- ШАПКА -->
 <div class="header">
-
   <div class="brand">
     Каталог сериалов <a href="https://t.me/Art_aTV" target="_blank">@Art_aTV</a>
   </div>
-
-  <div class="support">
-  <a href="https://t.me/Art_aTV_support_bot" target="_blank">
-    ⚙️ Техподдержка
-  </a>
 </div>
 
+<!-- ПОДДЕРЖКА (ЗАКРЕПЛЕНА) -->
+<div class="support-fixed">
+  <a href="https://t.me/Art_aTV_support_bot" target="_blank">⚙️ Техподдержка</a>
 </div>
 
+<!-- СЧЁТЧИК -->
+<div class="counter" id="counter">Загрузка...</div>
+
+<!-- БЫСТРЫЕ БУКВЫ -->
+<div class="letters" id="letters"></div>
+
+<!-- ПОИСК -->
 <input id="search" placeholder="Поиск сериалов...">
 
 <div class="list" id="list"></div>
@@ -161,14 +193,32 @@ const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
 let data = [];
+let allData = [];
 
+const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЭЮЯ".split("");
+
+// кнопки букв
+const lettersBox = document.getElementById("letters");
+
+letters.forEach(l => {
+  const b = document.createElement("button");
+  b.innerText = l;
+  b.onclick = () => filterLetter(l);
+  lettersBox.appendChild(b);
+});
+
+function filterLetter(letter){
+  render(allData.filter(i => (i.title || "").toUpperCase().startsWith(letter)));
+}
+
+// загрузка данных
 fetch(SHEET)
 .then(r => r.text())
 .then(t => {
 
     const rows = t.trim().split("\n").slice(1);
 
-    data = rows.map(r => {
+    allData = rows.map(r => {
         const cols = r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
 
         return {
@@ -179,7 +229,10 @@ fetch(SHEET)
         };
     });
 
-    render(data);
+    document.getElementById("counter").innerText =
+      "🎬 Всего сериалов: " + allData.length;
+
+    render(allData);
 });
 
 function render(list){
@@ -212,7 +265,7 @@ function render(list){
 /* поиск */
 document.getElementById("search").addEventListener("input", e => {
     const q = e.target.value.toLowerCase();
-    render(data.filter(i =>
+    render(allData.filter(i =>
         (i.title || "").toLowerCase().includes(q)
     ));
 });
