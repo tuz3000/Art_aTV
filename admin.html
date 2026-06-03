@@ -2,12 +2,12 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>YouTube Studio PRO Analytics</title>
-
+<title>Analytics PRO 2.0 - Art_aTV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -19,217 +19,306 @@ body{
 }
 
 .header{
-  padding:16px;
-  font-size:20px;
-  font-weight:800;
+  padding:14px;
   background:#111;
-  position:sticky;
-  top:0;
-  z-index:10;
+  font-size:18px;
+  font-weight:800;
 }
 
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:10px;
-  padding:10px;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:12px;
+  padding:12px;
 }
 
 .card{
   background:#15151c;
-  border-radius:12px;
+  border-radius:14px;
   padding:14px;
 }
 
 .big{
   font-size:26px;
-  font-weight:800;
+  font-weight:900;
   color:#3aa0ff;
 }
 
-.search{
-  width:calc(100% - 20px);
-  margin:10px;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  background:#1a1a1a;
-  color:white;
+.small{
+  color:#aaa;
+  font-size:12px;
 }
 
 table{
   width:100%;
   border-collapse:collapse;
-  font-size:14px;
+  margin-top:10px;
 }
 
-th,td{
-  padding:10px;
+td,th{
+  padding:8px;
   border-bottom:1px solid #222;
+  font-size:13px;
 }
 
-.rank{
-  color:#3aa0ff;
-  font-weight:700;
-}
-
-.green{color:#4ade80;}
-.yellow{color:#facc15;}
-.red{color:#f87171;}
-
-canvas{
+input{
+  width:95%;
+  padding:10px;
   margin:10px;
-  max-height:420px;
+  border-radius:10px;
+  border:none;
+  background:#1a1a1a;
+  color:white;
+}
+
+button{
+  padding:10px 12px;
+  border:none;
+  border-radius:10px;
+  background:#3aa0ff;
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.badge{
+  background:#222;
+  padding:4px 8px;
+  border-radius:8px;
+  font-size:12px;
+  color:#aaa;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-📊 YouTube Studio Style Analytics (Art_aTV)
+<div class="header">📊 Analytics PRO 2.0 — Art_aTV (YouTube Studio Mode)</div>
+
+<div class="grid">
+
+  <div class="card">
+    <div class="big" id="totalClicks">0</div>
+    <div class="small">🔥 Total clicks</div>
+  </div>
+
+  <div class="card">
+    <div class="big" id="uniqueSeries">0</div>
+    <div class="small">🎬 Unique series</div>
+  </div>
+
+  <div class="card">
+    <div class="big" id="todayClicks">0</div>
+    <div class="small">📅 Today clicks</div>
+  </div>
+
+  <div class="card">
+    <div class="big" id="topName">-</div>
+    <div class="small">🏆 Top series</div>
+  </div>
+
 </div>
 
 <div class="grid">
+
   <div class="card">
-    <div class="big" id="total">0</div>
-    🔥 клики
+    <h3>📈 Clicks Chart (Realtime)</h3>
+    <canvas id="chart"></canvas>
   </div>
 
   <div class="card">
-    <div class="big" id="series">0</div>
-    🎬 сериалов
+    <h3>🧠 AI Insights</h3>
+    <div id="insights" class="small"></div>
   </div>
 
-  <div class="card">
-    <div class="big" id="avg">0</div>
-    📈 среднее
-  </div>
-
-  <div class="card">
-    <div class="big" id="top">—</div>
-    🏆 лидер
-  </div>
 </div>
 
-<input class="search" id="search" placeholder="Поиск сериала...">
+<div class="card" style="margin:12px">
+  <h3>🔥 All Series Analytics</h3>
 
-<canvas id="bar"></canvas>
-<canvas id="pie"></canvas>
+  <input id="search" placeholder="Search series...">
 
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Сериал</th>
-<th>Клики</th>
-<th>%</th>
-<th>Активность</th>
-</tr>
-</thead>
-<tbody id="table"></tbody>
-</table>
+  <button onclick="exportCSV()">📥 Export CSV</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Series</th>
+        <th>Clicks</th>
+        <th>Trend</th>
+      </tr>
+    </thead>
+    <tbody id="table"></tbody>
+  </table>
+</div>
 
 <script>
 
+// ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
-  projectId: "art-atv"
+  projectId: "art-atv",
+  storageBucket: "art-atv.firebasestorage.app",
+  messagingSenderId: "549965698241",
+  appId: "1:549965698241:web:86cfa4dc6048d48d4ef040"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let data = [];
-let bar, pie;
+// ================= DATA =================
+let allClicks = [];
+let chart;
 
-function status(t){
-  const d = Date.now() - (t||0);
-  if(d < 86400000) return "🟢";
-  if(d < 604800000) return "🟡";
-  return "🔴";
+// ================= LIVE =================
+db.collection("clicks").onSnapshot(snap => {
+
+  allClicks = [];
+  let total = 0;
+  let map = {};
+
+  snap.forEach(d => {
+    const data = d.data();
+    const count = data.count || 0;
+
+    total += count;
+    map[data.title] = count;
+
+    allClicks.push({
+      title: data.title,
+      count: count,
+      time: data.time || 0
+    });
+  });
+
+  updateUI(total, map);
+  renderTable(map);
+  renderChart(map);
+  analyze(map);
+});
+
+// ================= UI =================
+function updateUI(total, map){
+
+  document.getElementById("totalClicks").innerText = total;
+
+  const entries = Object.entries(map);
+  document.getElementById("uniqueSeries").innerText = entries.length;
+
+  const top = entries.sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById("topName").innerText = top ? top[0] : "-";
+
+  // today clicks
+  const today = Date.now() - 86400000;
+  let todayCount = allClicks.filter(i => i.time > today).length;
+  document.getElementById("todayClicks").innerText = todayCount;
 }
 
-function render(){
+// ================= TABLE =================
+function renderTable(map){
 
-  let total = data.reduce((a,b)=>a+(b.count||0),0);
+  let rows = Object.entries(map)
+    .sort((a,b)=>b[1]-a[1]);
 
-  document.getElementById("total").innerText = total;
-  document.getElementById("series").innerText = data.length;
-  document.getElementById("avg").innerText = data.length ? (total/data.length).toFixed(1) : 0;
-  document.getElementById("top").innerText = data[0]?.title || "—";
+  const tbody = document.getElementById("table");
+  tbody.innerHTML = "";
 
-  let q = document.getElementById("search").value.toLowerCase();
+  rows.forEach(([title,count]) => {
 
-  let filtered = data.filter(i=>i.title.toLowerCase().includes(q));
+    let trend = count > 50 ? "🔥 hot" :
+                count > 10 ? "📈 growing" : "⚪ low";
 
-  let tbody = "";
-
-  filtered.forEach((i,idx)=>{
-
-    let percent = total ? ((i.count/total)*100).toFixed(1) : 0;
-
-    tbody += `
+    tbody.innerHTML += `
       <tr>
-        <td class="rank">${idx+1}</td>
-        <td>${i.title}</td>
-        <td>${i.count}</td>
-        <td>${percent}%</td>
-        <td>${status(i.time)}</td>
+        <td>${title}</td>
+        <td>${count}</td>
+        <td>${trend}</td>
       </tr>
     `;
   });
-
-  document.getElementById("table").innerHTML = tbody;
-
-  draw(filtered.slice(0,20));
 }
 
-function draw(v){
+// ================= CHART =================
+function renderChart(map){
 
-  if(bar) bar.destroy();
-  if(pie) pie.destroy();
+  const labels = Object.keys(map);
+  const data = Object.values(map);
 
-  bar = new Chart(document.getElementById("bar"),{
+  if(chart) chart.destroy();
+
+  chart = new Chart(document.getElementById("chart"), {
     type:"bar",
     data:{
-      labels:v.map(i=>i.title),
+      labels,
       datasets:[{
-        label:"Клики",
-        data:v.map(i=>i.count)
+        label:"Clicks",
+        data,
+        backgroundColor:"#3aa0ff"
       }]
-    }
-  });
-
-  pie = new Chart(document.getElementById("pie"),{
-    type:"pie",
-    data:{
-      labels:v.slice(0,10).map(i=>i.title),
-      datasets:[{
-        data:v.slice(0,10).map(i=>i.count)
-      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{ legend:{display:false} }
     }
   });
 }
 
-db.collection("clicks").onSnapshot(snap=>{
+// ================= AI INSIGHTS =================
+function analyze(map){
 
-  let arr = [];
+  let entries = Object.entries(map);
+  entries.sort((a,b)=>b[1]-a[1]);
 
-  snap.forEach(d=>{
-    arr.push(d.data());
-  });
+  let top = entries[0];
+  let avg = (entries.reduce((a,b)=>a+b[1],0) / entries.length).toFixed(1);
 
-  arr.sort((a,b)=>(b.count||0)-(a.count||0));
+  document.getElementById("insights").innerHTML = `
+    🧠 Most popular: <b>${top ? top[0] : "-"}</b><br><br>
+    📊 Average clicks per series: <b>${avg}</b><br><br>
+    ⚡ Total series: <b>${entries.length}</b><br><br>
+    📈 Recommendation: promote top 3 series for max conversion
+  `;
+}
 
-  data = arr;
+// ================= SEARCH =================
+document.getElementById("search").addEventListener("input", e => {
 
-  render();
+  let q = e.target.value.toLowerCase();
 
+  let filtered = allClicks.filter(i =>
+    i.title.toLowerCase().includes(q)
+  );
+
+  let map = {};
+  filtered.forEach(i => map[i.title] = i.count);
+
+  renderTable(map);
+  renderChart(map);
 });
 
-document.getElementById("search").addEventListener("input",render);
+// ================= EXPORT =================
+function exportCSV(){
+
+  let csv = "title,clicks\n";
+
+  allClicks.forEach(i=>{
+    csv += `${i.title},${i.count}\n`;
+  });
+
+  let blob = new Blob([csv], {type:"text/csv"});
+  let a = document.createElement("a");
+
+  a.href = URL.createObjectURL(blob);
+  a.download = "analytics.csv";
+  a.click();
+}
 
 </script>
 
