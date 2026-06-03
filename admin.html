@@ -2,9 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Admin Art_aTV</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netflix 3.0 Admin</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -15,12 +13,6 @@ body{
   font-family:Arial;
   background:#0b0b0f;
   color:white;
-}
-
-.header{
-  padding:16px;
-  background:#111;
-  font-weight:800;
 }
 
 .card{
@@ -35,59 +27,55 @@ body{
   font-weight:800;
   color:#3aa0ff;
 }
+
+.top{
+  margin:6px 0;
+}
 </style>
 </head>
 
 <body>
 
-<div class="header">📊 Admin Panel</div>
-
-<div class="card">
-  <div class="big" id="online">0</div>
-  🟢 Онлайн
-</div>
-
-<div class="card">
-  <div class="big" id="users">0</div>
-  👤 Пользователи
-</div>
-
 <div class="card">
   <div class="big" id="clicks">0</div>
-  🔥 Клики
+  🔥 Total clicks
+</div>
+
+<div class="card">
+  <div class="big">TOP 5</div>
+  <div id="top"></div>
 </div>
 
 <script>
 
-// ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
-  projectId: "art-atv",
-  storageBucket: "art-atv.firebasestorage.app",
-  messagingSenderId: "549965698241",
-  appId: "1:549965698241:web:86cfa4dc6048d48d4ef040"
+  projectId: "art-atv"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-
-// ================= LIVE =================
-db.collection("online").onSnapshot(snap=>{
-  document.getElementById("online").innerText = snap.size;
-});
-
-db.collection("analytics").onSnapshot(snap=>{
-  let users = new Set();
-  snap.forEach(d=>users.add(d.data().user_id));
-  document.getElementById("users").innerText = users.size;
-});
-
 db.collection("clicks").onSnapshot(snap=>{
+
   let total=0;
-  snap.forEach(d=>total += d.data().count||0);
-  document.getElementById("clicks").innerText = total;
+  let arr=[];
+
+  snap.forEach(d=>{
+    total+=d.data().count||0;
+    arr.push(d.data());
+  });
+
+  document.getElementById("clicks").innerText=total;
+
+  arr.sort((a,b)=>(b.count||0)-(a.count||0));
+
+  document.getElementById("top").innerHTML =
+    arr.slice(0,5).map((i,index)=>
+      `${index+1}. ${i.title} (${i.count})`
+    ).join("<br>");
+
 });
 
 </script>
