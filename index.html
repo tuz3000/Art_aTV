@@ -1,3 +1,9 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Catalog</title>
+
 <style>
 body {
   margin:0;
@@ -34,7 +40,7 @@ input {
   background:#15151c;
   padding:8px;
   border-radius:12px;
-  height:92px; /* ключ: убирает "разрыв" */
+  height:92px;
 }
 
 /* постер */
@@ -67,7 +73,7 @@ input {
   flex-shrink:0;
 }
 
-/* улучшение для телефона */
+/* адаптация под телефон */
 @media (max-width: 500px) {
   .item {
     height:88px;
@@ -83,3 +89,76 @@ input {
   }
 }
 </style>
+</head>
+
+<body>
+
+<input id="search" placeholder="Поиск...">
+
+<div class="list" id="list"></div>
+
+<script>
+
+const SHEET =
+"https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
+
+let data = [];
+
+fetch(SHEET)
+.then(r => r.text())
+.then(t => {
+
+    const rows = t.trim().split("\n").slice(1);
+
+    data = rows.map(r => {
+        const cols = r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+
+        return {
+            title: (cols[0] || "").trim(),
+            link: (cols[1] || "").trim(),
+            poster: (cols[2] || "").trim(),
+            kp: (cols[3] || "").trim()
+        };
+    });
+
+    render(data);
+});
+
+function render(list){
+    const box = document.getElementById("list");
+    box.innerHTML = "";
+
+    list.forEach(i => {
+        if(!i.title) return;
+
+        box.innerHTML += `
+        <div class="item">
+
+            <img class="poster"
+                 src="${i.poster}"
+                 onclick="window.open('${i.kp}','_blank')">
+
+            <div class="title">${i.title}</div>
+
+            <a class="btn"
+               href="${i.link}"
+               target="_blank"
+               rel="noopener noreferrer">
+               Оформить доступ
+            </a>
+
+        </div>`;
+    });
+}
+
+document.getElementById("search").addEventListener("input", e => {
+    const q = e.target.value.toLowerCase();
+    render(data.filter(i =>
+        (i.title || "").toLowerCase().includes(q)
+    ));
+});
+
+</script>
+
+</body>
+</html>
