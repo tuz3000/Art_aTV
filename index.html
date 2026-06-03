@@ -30,24 +30,18 @@ body{
   text-decoration:none;
 }
 
-/* SUPPORT BUTTON */
+/* SUPPORT */
 .support-btn{
   position:fixed;
   top:12px;
   right:12px;
   background:#2a2a2a;
-  color:#ccc;
+  color:#ddd;
   padding:8px 12px;
   border-radius:10px;
   font-size:12px;
   cursor:pointer;
   z-index:999;
-  transition:0.3s;
-}
-
-.support-btn:hover{
-  background:#3a3a3a;
-  color:white;
 }
 
 /* SECTION */
@@ -67,26 +61,33 @@ body{
   border-radius:12px;
 }
 
+/* POSTER */
 .card img{
-  width:70px;
-  height:100px;
+  width:80px;
+  height:110px;
   object-fit:cover;
   border-radius:6px;
+  cursor:pointer;
 }
 
+/* TITLE BIGGER */
 .title{
-  font-weight:700;
+  font-weight:800;
+  font-size:18px;
+  margin-bottom:6px;
 }
 
+/* RIGHT BUTTON */
 .btn{
-  margin-top:6px;
-  display:inline-block;
-  padding:6px 10px;
+  margin-left:auto;
+  align-self:center;
+  padding:8px 12px;
   background:#3aa0ff;
   color:white;
   border-radius:8px;
   font-size:12px;
   text-decoration:none;
+  white-space:nowrap;
 }
 
 /* TOP */
@@ -107,7 +108,7 @@ body{
   transform:scale(1.02);
 }
 
-/* UP BUTTON (modern glass style) */
+/* UP BUTTON */
 .up-btn{
   position:fixed;
   bottom:18px;
@@ -125,13 +126,41 @@ body{
   justify-content:center;
   cursor:pointer;
   z-index:999;
-  transition:0.25s;
-  box-shadow:0 8px 25px rgba(0,0,0,0.4);
 }
 
-.up-btn:hover{
-  background:rgba(255,255,255,0.15);
-  transform:scale(1.1);
+/* MODAL */
+.modal{
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.85);
+  z-index:1000;
+}
+
+.modal-content{
+  background:#15151c;
+  width:90%;
+  margin:20% auto;
+  padding:16px;
+  border-radius:12px;
+  text-align:center;
+}
+
+.modal img{
+  width:100%;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+.modal a{
+  display:inline-block;
+  padding:10px 14px;
+  background:#3aa0ff;
+  color:white;
+  border-radius:8px;
+  text-decoration:none;
 }
 </style>
 </head>
@@ -140,10 +169,9 @@ body{
 
 <!-- SUPPORT -->
 <div class="support-btn" onclick="window.open('https://t.me/Art_aTV','_blank')">
-⚙️ Support
+Поддержка
 </div>
 
-<!-- HEADER -->
 <div class="header">
 Каталог <a href="https://t.me/Art_aTV" target="_blank">@Art_aTV</a>
 </div>
@@ -154,12 +182,15 @@ body{
 <div class="section">🎬 Все сериалы</div>
 <div id="list"></div>
 
-<!-- UP BUTTON -->
 <div class="up-btn" onclick="scrollTopPage()">↑</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal" onclick="closeModal()">
+  <div class="modal-content" id="modalContent"></div>
+</div>
 
 <script>
 
-// ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
@@ -170,10 +201,9 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 
-// ================= CLICK =================
+// CLICK
 function trackClick(title){
   const ref = db.collection("clicks").doc(title);
-
   ref.set({
     title:title,
     count:firebase.firestore.FieldValue.increment(1)
@@ -181,7 +211,7 @@ function trackClick(title){
 }
 
 
-// ================= LOAD =================
+// LOAD
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
@@ -197,8 +227,7 @@ fetch(SHEET).then(r=>r.text()).then(t=>{
     return{
       title:c[0],
       link:c[1],
-      poster:c[2],
-      kp:c[3]
+      poster:c[2]
     };
   });
 
@@ -207,7 +236,7 @@ fetch(SHEET).then(r=>r.text()).then(t=>{
 });
 
 
-// ================= RENDER =================
+// RENDER
 function render(){
 
   const box=document.getElementById("list");
@@ -218,20 +247,21 @@ function render(){
     const id="card-"+i.title.replaceAll(" ","_");
 
     box.innerHTML+=`
-      <div class="card" id="${id}">
+      <div class="card">
 
-        <img src="${i.poster}">
+        <img src="${i.poster}"
+          onclick="openModal('${i.title}','${i.poster}','${i.link}')">
 
-        <div>
+        <div style="flex:1">
           <div class="title">${i.title}</div>
-
-          <a class="btn"
-            href="${i.link}"
-            target="_blank"
-            onclick="trackClick('${i.title}')">
-            Смотреть
-          </a>
         </div>
+
+        <a class="btn"
+          href="${i.link}"
+          target="_blank"
+          onclick="trackClick('${i.title}')">
+          Оформить доступ
+        </a>
 
       </div>
     `;
@@ -239,7 +269,7 @@ function render(){
 }
 
 
-// ================= TOP =================
+// TOP
 function loadTop(){
 
   db.collection("clicks").onSnapshot(snap=>{
@@ -248,8 +278,7 @@ function loadTop(){
     snap.forEach(d=>arr.push(d.data()));
 
     arr.sort((a,b)=>(b.count||0)-(a.count||0));
-
-    arr = arr.slice(0,5);
+    arr=arr.slice(0,5);
 
     const box=document.getElementById("top");
     box.innerHTML="";
@@ -268,25 +297,45 @@ function loadTop(){
 }
 
 
-// ================= SCROLL + HIGHLIGHT =================
+// GO TO + HIGHLIGHT
 function goTo(title){
 
-  const id="card-"+title.replaceAll(" ","_");
-  const el=document.getElementById(id);
+  const el=document.querySelectorAll(".card");
+  el.forEach(e=>{
 
-  if(!el) return;
+    if(e.innerText.includes(title)){
+      e.scrollIntoView({behavior:"smooth",block:"center"});
+      e.classList.add("highlight");
 
-  el.scrollIntoView({behavior:"smooth",block:"center"});
+      setTimeout(()=>{
+        e.classList.remove("highlight");
+      },2500);
+    }
 
-  el.classList.add("highlight");
-
-  setTimeout(()=>{
-    el.classList.remove("highlight");
-  },2500);
+  });
 }
 
 
-// ================= TOP SCROLL =================
+// MODAL
+function openModal(title,poster,link){
+
+  document.getElementById("modal").style.display="block";
+
+  document.getElementById("modalContent").innerHTML=`
+    <h3>${title}</h3>
+    <img src="${poster}">
+    <a href="${link}" target="_blank" onclick="trackClick('${title}')">
+      Открыть на Кинопоиске
+    </a>
+  `;
+}
+
+function closeModal(){
+  document.getElementById("modal").style.display="none";
+}
+
+
+// SCROLL TOP
 function scrollTopPage(){
   window.scrollTo({top:0,behavior:"smooth"});
 }
