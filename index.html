@@ -14,7 +14,7 @@ body{
   color:white;
 }
 
-/* FIXED HEADER */
+/* HEADER (CLEAN STYLE) */
 .header{
   position:fixed;
   top:0;
@@ -23,16 +23,27 @@ body{
   background:#111;
   padding:12px 14px;
   font-weight:900;
-  z-index:999;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  z-index:999;
 }
 
-.header a{
+/* BRAND */
+.brand a{
   color:#3aa0ff;
-  text-decoration:none;
   font-weight:900;
+  text-decoration:none;
+}
+
+/* SUPPORT */
+.support{
+  background:#2a2a2a;
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
 }
 
 /* SEARCH */
@@ -49,43 +60,41 @@ body{
   outline:none;
 }
 
-/* SUPPORT FIXED */
-.support-btn{
-  position:fixed;
-  top:10px;
-  right:10px;
-  background:#2a2a2a;
-  color:white;
-  padding:9px 12px;
-  border-radius:10px;
-  font-size:13px;
-  font-weight:900;
-  z-index:1000;
-  cursor:pointer;
-}
-
 /* SECTION */
 .section{
   padding:12px;
   font-weight:900;
   color:#3aa0ff;
-  margin-top:10px;
 }
 
-/* TOP */
-.top{
-  display:flex;
-  justify-content:space-between;
-  margin:6px 12px;
-  padding:10px;
+/* TOP DROPDOWN */
+.top-wrapper{
+  margin:0 12px;
+}
+
+.top-header{
   background:#1a1a22;
+  padding:10px;
   border-radius:10px;
   cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  font-weight:900;
 }
 
-/* SPACE BETWEEN TOP & LIST */
-.spacer{
-  height:18px;
+.top-list{
+  display:none;
+  margin-top:6px;
+}
+
+.top-item{
+  padding:10px;
+  background:#15151c;
+  margin-bottom:6px;
+  border-radius:8px;
+  display:flex;
+  justify-content:space-between;
+  cursor:pointer;
 }
 
 /* CARD */
@@ -123,58 +132,70 @@ body{
   font-size:13px;
   color:white;
   text-decoration:none;
-  white-space:nowrap;
 }
 
 /* HIGHLIGHT */
 .highlight{
   border:2px solid #3aa0ff;
   box-shadow:0 0 20px rgba(58,160,255,0.6);
-  transform:scale(1.02);
 }
 
-/* UP BUTTON */
+/* UP BUTTON FIXED */
 .up-btn{
   position:fixed;
   bottom:18px;
   right:18px;
-  width:50px;
-  height:50px;
+  width:52px;
+  height:52px;
   border-radius:50%;
   background:rgba(255,255,255,0.08);
   border:1px solid rgba(255,255,255,0.2);
   color:white;
-  font-size:18px;
+  font-size:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   cursor:pointer;
+  z-index:999;
 }
 </style>
 </head>
 
 <body>
 
-<!-- FIXED HEADER -->
+<!-- HEADER -->
 <div class="header">
-  <div>@Art_aTV</div>
-  <div class="support-btn" onclick="window.open('https://t.me/Art_aTV_support_bot','_blank')">
+  <div class="brand">
+    <a href="https://t.me/Art_aTV" target="_blank">@Art_aTV</a>
+  </div>
+
+  <div class="support" onclick="window.open('https://t.me/Art_aTV_support_bot','_blank')">
     ⚙️ Поддержка
   </div>
 </div>
 
 <!-- SEARCH -->
 <div class="search">
-  <input id="search" placeholder="Поиск сериалов..." oninput="render()">
+  <input id="search" placeholder="Поиск..." oninput="render()">
 </div>
 
-<!-- TOP -->
+<!-- TOP DROPDOWN -->
 <div class="section">🔥 ТОП 5 популярных</div>
-<div id="top"></div>
 
-<div class="spacer"></div>
+<div class="top-wrapper">
+  <div class="top-header" onclick="toggleTop()">
+    <span>Показать / скрыть</span>
+    <span>▼</span>
+  </div>
+
+  <div id="topList" class="top-list"></div>
+</div>
 
 <!-- LIST -->
 <div class="section">🎬 Все сериалы</div>
 <div id="list"></div>
 
+<!-- UP -->
 <div class="up-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
 
 <script>
@@ -183,16 +204,10 @@ const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
 let data = [];
-
-// CLICK STORAGE
 let clicks = JSON.parse(localStorage.getItem("clicks") || "{}");
 
-function saveClicks(){
-  localStorage.setItem("clicks", JSON.stringify(clicks));
-}
 
-
-// ================= LOAD SHEET =================
+// LOAD
 fetch(SHEET)
 .then(r=>r.text())
 .then(t=>{
@@ -215,7 +230,7 @@ fetch(SHEET)
 });
 
 
-// ================= SEARCH + RENDER =================
+// SEARCH + LIST
 function render(){
 
   const q = document.getElementById("search").value?.toLowerCase() || "";
@@ -248,10 +263,18 @@ function render(){
 }
 
 
-// ================= TOP 5 BY CLICKS =================
+// CLICK SYSTEM
+function addClick(title){
+  clicks[title] = (clicks[title] || 0) + 1;
+  localStorage.setItem("clicks", JSON.stringify(clicks));
+  updateTop();
+}
+
+
+// TOP UPDATE
 function updateTop(){
 
-  const box = document.getElementById("top");
+  const box = document.getElementById("topList");
   box.innerHTML = "";
 
   const sorted = Object.entries(clicks)
@@ -261,7 +284,7 @@ function updateTop(){
   sorted.forEach(([title,count],i)=>{
 
     box.innerHTML += `
-      <div class="top" onclick="goTo('${title}')">
+      <div class="top-item" onclick="goTo('${title}')">
         <div>${i+1}. ${title}</div>
         <div>🔥 ${count}</div>
       </div>
@@ -270,32 +293,28 @@ function updateTop(){
 }
 
 
-// ================= CLICK SYSTEM =================
-function addClick(title){
-
-  clicks[title] = (clicks[title] || 0) + 1;
-  saveClicks();
-  updateTop();
+// TOGGLE TOP
+function toggleTop(){
+  const el = document.getElementById("topList");
+  el.style.display = (el.style.display === "block") ? "none" : "block";
 }
 
 
-// ================= GO TO =================
+// GO TO
 function goTo(title){
 
   document.querySelectorAll(".card").forEach(c=>{
     if(c.innerText.includes(title)){
       c.scrollIntoView({behavior:"smooth",block:"center"});
       c.classList.add("highlight");
-
       setTimeout(()=>c.classList.remove("highlight"),2000);
     }
   });
 }
 
 
-// ================= OPEN KP =================
+// KP OPEN
 function openKP(link){
-
   if(!link) link="https://www.kinopoisk.ru/";
   window.open(link,"_blank");
 }
