@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Catalog</title>
+<title>Каталог сериалов Art_aTV</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -14,7 +14,30 @@ body {
   color:white;
 }
 
-/* ПОИСК */
+/* верхняя панель */
+.header {
+  padding:14px 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#111;
+  font-weight:700;
+}
+
+/* название */
+.brand {
+  font-size:16px;
+  color:#ffffff;
+}
+
+/* техподдержка */
+.support a {
+  color:#3aa0ff;
+  text-decoration:none;
+  font-size:13px;
+}
+
+/* поиск */
 input {
   width:92%;
   margin:14px 4%;
@@ -26,7 +49,7 @@ input {
   font-size:17px;
 }
 
-/* СПИСОК */
+/* список */
 .list {
   display:flex;
   flex-direction:column;
@@ -34,7 +57,7 @@ input {
   padding:12px;
 }
 
-/* КАРТОЧКА */
+/* карточка */
 .item {
   display:flex;
   align-items:center;
@@ -45,7 +68,7 @@ input {
   min-height:130px;
 }
 
-/* ПОСТЕР */
+/* постер */
 .poster {
   width:95px;
   height:140px;
@@ -55,7 +78,7 @@ input {
   flex-shrink:0;
 }
 
-/* НАЗВАНИЕ */
+/* название */
 .title {
   flex:1;
   font-size:18px;
@@ -63,7 +86,7 @@ input {
   line-height:1.2;
 }
 
-/* КНОПКА */
+/* кнопка */
 .btn {
   background:#3aa0ff;
   color:white;
@@ -77,12 +100,11 @@ input {
   box-shadow:0 6px 14px rgba(58,160,255,0.35);
 }
 
-/* эффект нажатия */
 .btn:active {
   transform:scale(0.95);
 }
 
-/* МОБИЛЬНАЯ АДАПТАЦИЯ */
+/* адаптация */
 @media (max-width: 500px) {
 
   .item {
@@ -108,6 +130,17 @@ input {
 </head>
 
 <body>
+
+<!-- ШАПКА -->
+<div class="header">
+  <div class="brand">Каталог сериалов Art_aTV</div>
+
+  <div class="support">
+    <a href="https://t.me/Art_aTV_support_bot" target="_blank">
+      Техподдержка
+    </a>
+  </div>
+</div>
 
 <input id="search" placeholder="Поиск сериалов...">
 
@@ -150,15 +183,12 @@ function render(list){
         box.innerHTML += `
         <div class="item">
 
-            <!-- постер → Kinopoisk -->
             <img class="poster"
                  src="${i.poster}"
                  onclick="window.open('${i.kp}','_blank')">
 
-            <!-- название -->
             <div class="title">${i.title}</div>
 
-            <!-- кнопка → бот -->
             <a class="btn"
                href="${i.link}"
                target="_blank"
