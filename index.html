@@ -37,7 +37,6 @@ body{
   margin:10px 12px;
   background:#15151c;
   border-radius:12px;
-  transition:0.3s;
 }
 
 .card img{
@@ -62,7 +61,6 @@ body{
   text-decoration:none;
 }
 
-/* TOP */
 .top{
   display:flex;
   justify-content:space-between;
@@ -79,6 +77,32 @@ body{
   box-shadow:0 0 20px rgba(58,160,255,0.6);
   transform:scale(1.02);
 }
+
+/* ================= UP BUTTON ================= */
+.up-btn{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background:rgba(58,160,255,0.25);
+  backdrop-filter: blur(8px);
+  border:1px solid rgba(58,160,255,0.4);
+  color:white;
+  font-size:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:999;
+  transition:0.3s;
+}
+
+.up-btn:hover{
+  background:rgba(58,160,255,0.45);
+  transform:scale(1.1);
+}
 </style>
 </head>
 
@@ -91,6 +115,9 @@ body{
 
 <div class="section">🎬 Все сериалы</div>
 <div id="list"></div>
+
+<!-- 🔵 UP BUTTON -->
+<div class="up-btn" onclick="scrollTopPage()">⬆️</div>
 
 <script>
 
@@ -123,22 +150,20 @@ function trackClick(title){
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
-let data = [];
+let data=[];
 
-fetch(SHEET)
-.then(r => r.text())
-.then(t => {
+fetch(SHEET).then(r=>r.text()).then(t=>{
 
-  const rows = t.trim().split("\n").slice(1);
+  const rows=t.trim().split("\n").slice(1);
 
-  data = rows.map(r => {
-    const c = r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+  data = rows.map(r=>{
+    const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
 
-    return {
-      title: (c[0] || "").trim(),
-      link: (c[1] || "").trim(),
-      poster: (c[2] || "").trim(),
-      kp: (c[3] || "").trim()
+    return{
+      title:c[0],
+      link:c[1],
+      poster:c[2],
+      kp:c[3]
     };
   });
 
@@ -150,14 +175,14 @@ fetch(SHEET)
 // ================= RENDER =================
 function render(){
 
-  const box = document.getElementById("list");
-  box.innerHTML = "";
+  const box=document.getElementById("list");
+  box.innerHTML="";
 
-  data.forEach(i => {
+  data.forEach(i=>{
 
-    const id = "card-" + i.title.replaceAll(" ","_");
+    const id="card-"+i.title.replaceAll(" ","_");
 
-    box.innerHTML += `
+    box.innerHTML+=`
       <div class="card" id="${id}">
 
         <img src="${i.poster}">
@@ -182,22 +207,22 @@ function render(){
 // ================= TOP =================
 function loadTop(){
 
-  db.collection("clicks").onSnapshot(snap => {
+  db.collection("clicks").onSnapshot(snap=>{
 
-    let arr = [];
+    let arr=[];
 
-    snap.forEach(d => arr.push(d.data()));
+    snap.forEach(d=>arr.push(d.data()));
 
-    arr.sort((a,b) => (b.count||0) - (a.count||0));
+    arr.sort((a,b)=>(b.count||0)-(a.count||0));
 
-    arr = arr.slice(0,5);
+    arr=arr.slice(0,5);
 
-    const box = document.getElementById("top");
-    box.innerHTML = "";
+    const box=document.getElementById("top");
+    box.innerHTML="";
 
-    arr.forEach((i,index) => {
+    arr.forEach((i,index)=>{
 
-      box.innerHTML += `
+      box.innerHTML+=`
         <div class="top" onclick="goTo('${i.title}')">
           <div>${index+1}. ${i.title}</div>
           <div>🔥 ${i.count||0}</div>
@@ -209,11 +234,11 @@ function loadTop(){
 }
 
 
-// ================= SCROLL + HIGHLIGHT =================
+// ================= GO TO + HIGHLIGHT =================
 function goTo(title){
 
-  const id = "card-" + title.replaceAll(" ","_");
-  const el = document.getElementById(id);
+  const id="card-"+title.replaceAll(" ","_");
+  const el=document.getElementById(id);
 
   if(!el) return;
 
@@ -221,9 +246,18 @@ function goTo(title){
 
   el.classList.add("highlight");
 
-  setTimeout(() => {
+  setTimeout(()=>{
     el.classList.remove("highlight");
-  }, 2500);
+  },2500);
+}
+
+
+// ================= SCROLL TOP =================
+function scrollTopPage(){
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
 }
 
 </script>
