@@ -17,7 +17,6 @@ body{
   color:white;
 }
 
-/* HEADER */
 .header{
   padding:16px;
   font-size:18px;
@@ -30,7 +29,6 @@ body{
   text-decoration:none;
 }
 
-/* SUPPORT */
 .support-btn{
   position:fixed;
   top:12px;
@@ -44,14 +42,12 @@ body{
   z-index:999;
 }
 
-/* SECTION */
 .section{
   padding:12px;
   color:#3aa0ff;
   font-weight:800;
 }
 
-/* CARD */
 .card{
   display:flex;
   gap:12px;
@@ -61,7 +57,6 @@ body{
   border-radius:12px;
 }
 
-/* POSTER */
 .card img{
   width:80px;
   height:110px;
@@ -70,14 +65,11 @@ body{
   cursor:pointer;
 }
 
-/* TITLE BIGGER */
 .title{
   font-weight:800;
   font-size:18px;
-  margin-bottom:6px;
 }
 
-/* RIGHT BUTTON */
 .btn{
   margin-left:auto;
   align-self:center;
@@ -87,10 +79,8 @@ body{
   border-radius:8px;
   font-size:12px;
   text-decoration:none;
-  white-space:nowrap;
 }
 
-/* TOP */
 .top{
   display:flex;
   justify-content:space-between;
@@ -101,14 +91,12 @@ body{
   cursor:pointer;
 }
 
-/* HIGHLIGHT */
 .highlight{
   border:2px solid #3aa0ff;
   box-shadow:0 0 20px rgba(58,160,255,0.6);
   transform:scale(1.02);
 }
 
-/* UP BUTTON */
 .up-btn{
   position:fixed;
   bottom:18px;
@@ -128,7 +116,6 @@ body{
   z-index:999;
 }
 
-/* MODAL */
 .modal{
   display:none;
   position:fixed;
@@ -167,7 +154,6 @@ body{
 
 <body>
 
-<!-- SUPPORT -->
 <div class="support-btn" onclick="window.open('https://t.me/Art_aTV','_blank')">
 Поддержка
 </div>
@@ -204,6 +190,7 @@ const db = firebase.firestore();
 // CLICK
 function trackClick(title){
   const ref = db.collection("clicks").doc(title);
+
   ref.set({
     title:title,
     count:firebase.firestore.FieldValue.increment(1)
@@ -211,7 +198,7 @@ function trackClick(title){
 }
 
 
-// LOAD
+// LOAD CSV
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
@@ -225,9 +212,11 @@ fetch(SHEET).then(r=>r.text()).then(t=>{
     const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
 
     return{
-      title:c[0],
-      link:c[1],
-      poster:c[2]
+      title:(c[0]||"").trim(),
+      link:(c[1]||"").trim(),
+      poster:(c[2]||"").trim(),
+      kp:(c[3]||"").trim(),
+      kpLink:(c[4]||"").trim()   // ✅ ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ
     };
   });
 
@@ -244,13 +233,11 @@ function render(){
 
   data.forEach(i=>{
 
-    const id="card-"+i.title.replaceAll(" ","_");
-
     box.innerHTML+=`
       <div class="card">
 
         <img src="${i.poster}"
-          onclick="openModal('${i.title}','${i.poster}','${i.link}')">
+          onclick="openModal('${i.title}','${i.poster}','${i.kpLink}')">
 
         <div style="flex:1">
           <div class="title">${i.title}</div>
@@ -297,34 +284,15 @@ function loadTop(){
 }
 
 
-// GO TO + HIGHLIGHT
-function goTo(title){
-
-  const el=document.querySelectorAll(".card");
-  el.forEach(e=>{
-
-    if(e.innerText.includes(title)){
-      e.scrollIntoView({behavior:"smooth",block:"center"});
-      e.classList.add("highlight");
-
-      setTimeout(()=>{
-        e.classList.remove("highlight");
-      },2500);
-    }
-
-  });
-}
-
-
 // MODAL
-function openModal(title,poster,link){
+function openModal(title,poster,kpLink){
 
   document.getElementById("modal").style.display="block";
 
   document.getElementById("modalContent").innerHTML=`
     <h3>${title}</h3>
     <img src="${poster}">
-    <a href="${link}" target="_blank" onclick="trackClick('${title}')">
+    <a href="${kpLink}" target="_blank">
       Открыть на Кинопоиске
     </a>
   `;
