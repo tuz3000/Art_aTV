@@ -2,14 +2,12 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Каталог сериалов @Art_aTV</title>
+<title>Art_aTV Netflix 3.0</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 body{
@@ -21,39 +19,28 @@ body{
 
 .header{
   padding:16px;
-  background:#111;
-  font-weight:800;
   font-size:18px;
-}
-
-.counter{
-  padding:10px 14px;
-  color:#aaa;
+  font-weight:800;
+  background:#111;
 }
 
 .section{
-  padding:14px;
-  font-weight:800;
+  padding:12px;
   color:#3aa0ff;
+  font-weight:800;
 }
 
-.list{
+.card{
   display:flex;
-  flex-direction:column;
   gap:12px;
   padding:12px;
-}
-
-.item{
-  display:flex;
-  gap:12px;
-  align-items:center;
+  margin:10px 12px;
   background:#15151c;
-  padding:12px;
   border-radius:12px;
+  transition:0.3s;
 }
 
-.poster{
+.card img{
   width:70px;
   height:100px;
   object-fit:cover;
@@ -61,44 +48,48 @@ body{
 }
 
 .title{
-  flex:1;
   font-weight:700;
 }
 
 .btn{
+  margin-top:6px;
+  display:inline-block;
+  padding:6px 10px;
   background:#3aa0ff;
   color:white;
-  padding:8px 10px;
   border-radius:8px;
   font-size:12px;
   text-decoration:none;
-  cursor:pointer;
 }
 
-/* TOP */
-.pop-item{
+.top{
   display:flex;
   justify-content:space-between;
-  padding:10px;
   margin:6px 12px;
+  padding:10px;
   background:#1a1a22;
   border-radius:10px;
   cursor:pointer;
+}
+
+/* 🔥 HIGHLIGHT */
+.highlight{
+  border:2px solid #3aa0ff;
+  box-shadow:0 0 20px rgba(58,160,255,0.6);
+  transform:scale(1.02);
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">Каталог сериалов @Art_aTV</div>
-
-<div class="counter" id="counter">Загрузка...</div>
+<div class="header">🎬 Netflix 3.0 @Art_aTV</div>
 
 <div class="section">🔥 ТОП 5 популярных</div>
-<div id="popular"></div>
+<div id="top"></div>
 
 <div class="section">🎬 Все сериалы</div>
-<div class="list" id="list"></div>
+<div id="list"></div>
 
 <script>
 
@@ -106,48 +97,20 @@ body{
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
-  projectId: "art-atv",
-  storageBucket: "art-atv.firebasestorage.app",
-  messagingSenderId: "549965698241",
-  appId: "1:549965698241:web:86cfa4dc6048d48d4ef040"
+  projectId: "art-atv"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 
-// ================= TELEGRAM =================
-let tg = window.Telegram?.WebApp;
-tg?.expand();
-
-const user = {
-  id: tg?.initDataUnsafe?.user?.id || "guest",
-  username: tg?.initDataUnsafe?.user?.username || "guest"
-};
-
-
-// ================= ANALYTICS =================
-function trackEvent(type,data=""){
-  db.collection("analytics").add({
-    user_id:user.id,
-    type,
-    data,
-    time:Date.now()
-  });
-}
-
-
-// ================= CLICK SYSTEM (NETFLIX STYLE) =================
-function trackClick(title){
-
+// ================= CLICK =================
+function click(title){
   const ref = db.collection("clicks").doc(title);
-
   ref.set({
     title:title,
     count:firebase.firestore.FieldValue.increment(1)
   },{merge:true});
-
-  trackEvent("click",title);
 }
 
 
@@ -155,85 +118,70 @@ function trackClick(title){
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
-let allData=[];
+let data=[];
 
-fetch(SHEET)
-.then(r=>r.text())
-.then(t=>{
+fetch(SHEET).then(r=>r.text()).then(t=>{
 
   const rows=t.trim().split("\n").slice(1);
 
-  allData = rows.map(r=>{
+  data = rows.map(r=>{
     const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
 
     return{
-      title:(c[0]||"").trim(),
-      link:(c[1]||"").trim(),
-      poster:(c[2]||"").trim(),
-      kp:(c[3]||"").trim()
+      title:c[0],
+      link:c[1],
+      poster:c[2],
+      kp:c[3]
     };
   });
 
-  document.getElementById("counter").innerText =
-  "🎬 Всего сериалов: " + allData.length;
-
-  render(allData);
-  loadPopular();
-
-  trackEvent("open_app");
+  render();
+  top();
 });
 
 
 // ================= RENDER =================
-function render(list){
+function render(){
 
   const box=document.getElementById("list");
   box.innerHTML="";
 
-  list.forEach(i=>{
-
+  data.forEach(i=>{
     box.innerHTML+=`
-    <div class="item">
+    <div class="card" id="card-${i.title.replaceAll(' ','_')}">
 
-      <img class="poster"
-        src="${i.poster}"
-        onclick="window.open('${i.kp}','_blank')">
+      <img src="${i.poster}">
 
-      <div class="title">${i.title}</div>
-
-      <a class="btn"
-        href="${i.link}"
-        target="_blank"
-        onclick="trackClick('${i.title}')">
-        Смотреть
-      </a>
+      <div>
+        <div class="title">${i.title}</div>
+        <a class="btn" href="${i.link}" target="_blank"
+        onclick="click('${i.title}')">Смотреть</a>
+      </div>
 
     </div>`;
   });
 }
 
 
-// ================= TOP 5 REALTIME =================
-function loadPopular(){
+// ================= TOP =================
+function top(){
 
   db.collection("clicks").onSnapshot(snap=>{
 
     let arr=[];
-
     snap.forEach(d=>arr.push(d.data()));
 
     arr.sort((a,b)=>(b.count||0)-(a.count||0));
-
     arr = arr.slice(0,5);
 
-    const box=document.getElementById("popular");
+    const box=document.getElementById("top");
     box.innerHTML="";
 
     arr.forEach((i,index)=>{
 
       box.innerHTML+=`
-      <div class="pop-item"
-        onclick="scrollToItem('${i.title.toLowerCase()}')">
+      <div class="top"
+        onclick="goTo('${i.title}')">
 
         <div>${index+1}. ${i.title}</div>
         <div>🔥 ${i.count||0}</div>
@@ -245,17 +193,21 @@ function loadPopular(){
 }
 
 
-// ================= SCROLL =================
-function scrollToItem(title){
+// ================= SCROLL + HIGHLIGHT =================
+function goTo(title){
 
-  const items=document.querySelectorAll(".item");
+  const id="card-"+title.replaceAll(' ','_');
+  const el=document.getElementById(id);
 
-  items.forEach(el=>{
-    if(el.innerText.toLowerCase().includes(title)){
-      el.scrollIntoView({behavior:"smooth",block:"center"});
-    }
-  });
+  if(!el) return;
 
+  el.scrollIntoView({behavior:"smooth",block:"center"});
+
+  el.classList.add("highlight");
+
+  setTimeout(()=>{
+    el.classList.remove("highlight");
+  },2500);
 }
 
 </script>
