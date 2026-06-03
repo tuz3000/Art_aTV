@@ -2,12 +2,14 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Art_aTV Secure Admin</title>
+<title>Каталог сериалов @Art_aTV</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 body{
@@ -18,68 +20,84 @@ body{
 }
 
 .header{
-  padding:16px;
+  padding:14px;
   background:#111;
   font-size:18px;
   font-weight:800;
 }
 
-.grid{
-  padding:14px;
+.counter{
+  padding:10px 14px;
+  color:#aaa;
 }
 
-.card{
-  background:#15151c;
+input{
+  width:92%;
+  margin:10px 4%;
   padding:14px;
   border-radius:12px;
-  margin-bottom:12px;
+  border:none;
+  background:#1a1a1a;
+  color:white;
 }
 
-.big{
-  font-size:22px;
-  font-weight:800;
+.section{
+  padding:14px;
   color:#3aa0ff;
+  font-weight:700;
 }
 
-.small{
-  color:#aaa;
-  font-size:13px;
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding:12px;
+}
+
+.item{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  background:#15151c;
+  padding:12px;
+  border-radius:12px;
+}
+
+.poster{
+  width:70px;
+  height:100px;
+  object-fit:cover;
+  border-radius:6px;
+}
+
+.title{
+  flex:1;
+  font-weight:700;
+}
+
+.btn{
+  background:#3aa0ff;
+  color:white;
+  padding:8px 10px;
+  border-radius:8px;
+  font-size:12px;
+  text-decoration:none;
 }
 </style>
 </head>
 
 <body>
 
-<div id="denied" style="display:none;padding:20px">
-  ❌ Доступ запрещён
+<div class="header">
+Каталог сериалов @Art_aTV
 </div>
 
-<div id="app" style="display:none">
+<div class="counter" id="counter">Загрузка...</div>
 
-  <div class="header">
-    🔐 Admin Panel Art_aTV
-  </div>
+<input id="search" placeholder="Поиск...">
 
-  <div class="grid">
-
-    <div class="card">
-      <div class="big" id="online">0</div>
-      <div class="small">🟢 Онлайн сейчас</div>
-    </div>
-
-    <div class="card">
-      <div class="big" id="users">0</div>
-      <div class="small">👤 Уникальные пользователи</div>
-    </div>
-
-    <div class="card">
-      <div class="big" id="clicks">0</div>
-      <div class="small">🔥 Всего кликов</div>
-    </div>
-
-  </div>
-
-</div>
+<div class="section">🎬 Все сериалы</div>
+<div class="list" id="list"></div>
 
 <script>
 
@@ -101,51 +119,110 @@ const db = firebase.firestore();
 let tg = window.Telegram?.WebApp;
 tg?.expand();
 
-const userId = tg?.initDataUnsafe?.user?.id;
+const user = {
+  id: tg?.initDataUnsafe?.user?.id || "no_telegram",
+  username: tg?.initDataUnsafe?.user?.username || "no_username"
+};
 
 
-// ================= 🔐 ACCESS =================
-const ADMIN_ID = 161181425;
+// ================= ONLINE SYSTEM =================
+const onlineRef = db.collection("online").doc(String(user.id));
 
-if(userId !== ADMIN_ID){
-  document.getElementById("denied").style.display = "block";
-}else{
-  document.getElementById("app").style.display = "block";
-  init();
+function setOnline(){
+  onlineRef.set({
+    username:user.username,
+    lastSeen:Date.now()
+  },{merge:true});
+}
+
+setOnline();
+setInterval(setOnline,30000);
+
+window.addEventListener("beforeunload",()=>{
+  onlineRef.delete();
+});
+
+
+// ================= ANALYTICS =================
+function trackEvent(type,data=""){
+  db.collection("analytics").add({
+    user_id:user.id,
+    username:user.username,
+    type,
+    data,
+    time:Date.now()
+  });
 }
 
 
-// ================= REAL-TIME =================
-function init(){
+// ================= DATA (СЕРИАЛЫ) =================
+const SHEET =
+"https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
-  // ONLINE
-  db.collection("online").onSnapshot(snap=>{
-    document.getElementById("online").innerText = snap.size;
+let allData=[];
+
+fetch(SHEET)
+.then(r=>r.text())
+.then(t=>{
+
+  const rows=t.trim().split("\n").slice(1);
+
+  allData=rows.map(r=>{
+    const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+
+    return{
+      title:(c[0]||"").trim(),
+      link:(c[1]||"").trim(),
+      poster:(c[2]||"").trim(),
+      kp:(c[3]||"").trim()
+    };
   });
 
-  // USERS
-  db.collection("analytics").onSnapshot(snap=>{
-    let set = new Set();
+  document.getElementById("counter").innerText =
+  "🎬 Всего сериалов: " + allData.length;
 
-    snap.forEach(d=>{
-      set.add(d.data().user_id);
-    });
+  render(allData);
 
-    document.getElementById("users").innerText = set.size;
+  trackEvent("open_app");
+});
+
+
+// ================= RENDER =================
+function render(list){
+  const box=document.getElementById("list");
+  box.innerHTML="";
+
+  list.forEach(i=>{
+
+    box.innerHTML+=`
+    <div class="item">
+
+      <img class="poster"
+        src="${i.poster}"
+        onclick="window.open('${i.kp}','_blank')">
+
+      <div class="title">${i.title}</div>
+
+      <a class="btn"
+        href="${i.link}"
+        target="_blank"
+        onclick="trackEvent('click', '${i.title}')">
+        Оформить доступ
+      </a>
+
+    </div>`;
   });
-
-  // CLICKS
-  db.collection("clicks").onSnapshot(snap=>{
-    let total = 0;
-
-    snap.forEach(d=>{
-      total += d.data().count || 0;
-    });
-
-    document.getElementById("clicks").innerText = total;
-  });
-
 }
+
+
+// ================= SEARCH =================
+document.getElementById("search").addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase();
+
+  render(allData.filter(i=>
+    i.title.toLowerCase().includes(q)
+  ));
+});
 
 </script>
 
