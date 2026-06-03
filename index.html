@@ -38,6 +38,7 @@ body{
   text-decoration:none;
 }
 
+/* поддержка */
 .support{
   position:fixed;
   right:12px;
@@ -56,11 +57,13 @@ body{
   font-weight:600;
 }
 
+/* счётчик */
 .counter{
   padding:10px 16px;
   color:#aaa;
 }
 
+/* поиск */
 input{
   width:92%;
   margin:10px 4%;
@@ -71,34 +74,38 @@ input{
   color:white;
 }
 
+/* секции */
 .section{
-  padding:10px 12px;
+  padding:12px;
   color:#3aa0ff;
   font-weight:700;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
   cursor:pointer;
 }
 
+/* список */
 .list{
   display:flex;
   flex-direction:column;
-  gap:12px;
-  padding:10px;
+  gap:14px;
+  padding:12px;
 }
 
+/* карточка */
 .item{
   display:flex;
   align-items:center;
   gap:14px;
   background:#15151c;
-  padding:12px;
+  padding:14px;
   border-radius:14px;
-  scroll-margin-top:100px;
-  transition:0.3s;
+  transition:0.2s;
 }
 
-.item.highlight{
-  outline:2px solid #3aa0ff;
-  transform:scale(1.02);
+.item:hover{
+  transform:scale(1.01);
 }
 
 .poster{
@@ -114,6 +121,7 @@ input{
   font-weight:700;
 }
 
+/* кнопка */
 .btn{
   background:#3aa0ff;
   color:white;
@@ -122,6 +130,11 @@ input{
   font-size:13px;
   font-weight:600;
   text-decoration:none;
+}
+
+/* динамическая иконка */
+.badge{
+  font-size:18px;
 }
 </style>
 </head>
@@ -142,15 +155,21 @@ input{
 
 <input id="search" placeholder="Поиск сериалов...">
 
+<!-- 🔥 ПОПУЛЯРНОЕ -->
 <div class="section" onclick="togglePopular()">
-🔥 Популярное ⬇️
+  <span>🔥 Популярное</span>
+  <span id="arrow">⯈</span>
 </div>
 
 <div id="popularWrap" style="display:none;">
   <div class="list" id="popular"></div>
 </div>
 
-<div class="section">🎬 Все сериалы</div>
+<!-- 🎬 ВСЕ СЕРИАЛЫ -->
+<div class="section">
+  🎬 Все сериалы
+</div>
+
 <div class="list" id="list"></div>
 
 <script>
@@ -167,20 +186,25 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// нормализация ID
-function makeId(title){
-  return "item-" + title.trim().toLowerCase().replace(/\s+/g,"-");
+// 🔥 LIVE ОБНОВЛЕНИЕ
+function startLive(){
+  db.collection("clicks").onSnapshot(() => {
+    loadPopular();
+  });
+}
+
+// нормализация
+function key(title){
+  return title.trim().toLowerCase();
 }
 
 // клики
 function trackClick(title){
-  const key = title.trim().toLowerCase();
-
-  db.collection("clicks").doc(key).set({
-    title: title,
-    count: firebase.firestore.FieldValue.increment(1),
-    time: Date.now()
-  }, { merge:true });
+  db.collection("clicks").doc(key(title)).set({
+    title:title,
+    count:firebase.firestore.FieldValue.increment(1),
+    time:Date.now()
+  },{merge:true});
 }
 
 // SHEET
@@ -211,25 +235,26 @@ fetch(SHEET)
 
   render(allData);
   loadPopular();
+  startLive();
 });
 
-// ВСЕ СЕРИАЛЫ
+// 🎬 ВСЕ СЕРИАЛЫ
 function render(list){
   const box=document.getElementById("list");
   box.innerHTML="";
 
   list.forEach(i=>{
 
-    const id = makeId(i.title);
+    const emoji = ["🎬","📺","🔥","⭐","🎥"][Math.floor(Math.random()*5)];
 
     box.innerHTML+=`
-    <div class="item" id="${id}">
+    <div class="item">
 
       <img class="poster"
         src="${i.poster}"
         onclick="window.open('${i.kp}','_blank')">
 
-      <div class="title">${i.title}</div>
+      <div class="title">${emoji} ${i.title}</div>
 
       <a class="btn"
         href="${i.link}"
@@ -242,7 +267,7 @@ function render(list){
   });
 }
 
-// ПОПУЛЯРНОЕ
+// 🔥 ПОПУЛЯРНОЕ
 function loadPopular(){
 
   db.collection("clicks")
@@ -256,27 +281,27 @@ function loadPopular(){
     });
 
     arr.sort((a,b)=>(b.count||0)-(a.count||0));
-    arr = arr.slice(0,5);
+    arr=arr.slice(0,5);
 
     renderPopular(arr);
   });
 }
 
-// ПОПУЛЯРНОЕ (КЛИКАБЕЛЬНОЕ)
+// 🔥 ОТРИСОВКА
 function renderPopular(list){
   const box=document.getElementById("popular");
   box.innerHTML="";
 
-  list.forEach(i=>{
+  const emojis=["🔥","⭐","🚀","💎","⚡"];
 
-    const id = makeId(i.title);
+  list.forEach((i,index)=>{
 
     box.innerHTML+=`
     <div class="item"
       style="cursor:pointer"
-      onclick="scrollToItem('${id}')">
+      onclick="scrollToItem('${key(i.title)}')">
 
-      <div class="title">${i.title}</div>
+      <div class="title">${emojis[index]} ${i.title}</div>
 
       <div style="color:#3aa0ff;font-weight:700">
         🔥 ${i.count||0}
@@ -286,35 +311,33 @@ function renderPopular(list){
   });
 }
 
-// СКРОЛЛ + ПОДСВЕТКА
-function scrollToItem(id){
+// 🔽 стрелка + раскрытие
+let open=false;
 
-  const el = document.getElementById(id);
+function togglePopular(){
+  open=!open;
+
+  document.getElementById("popularWrap").style.display =
+  open ? "block" : "none";
+
+  document.getElementById("arrow").innerText =
+  open ? "⯆" : "⯈";
+}
+
+// 🔽 скролл
+function scrollToItem(id){
+  const el=[...document.querySelectorAll(".item")]
+    .find(e=>key(e.innerText).includes(id));
 
   if(!el) return;
 
-  el.scrollIntoView({
-    behavior:"smooth",
-    block:"center"
-  });
+  el.scrollIntoView({behavior:"smooth",block:"center"});
 
-  el.classList.add("highlight");
-
-  setTimeout(()=>{
-    el.classList.remove("highlight");
-  },1500);
+  el.style.outline="2px solid #3aa0ff";
+  setTimeout(()=>el.style.outline="",1500);
 }
 
-// раскрытие
-let openPopular=false;
-
-function togglePopular(){
-  openPopular=!openPopular;
-  document.getElementById("popularWrap").style.display =
-  openPopular ? "block" : "none";
-}
-
-// поиск
+// 🔍 поиск
 document.getElementById("search").addEventListener("input",e=>{
   const q=e.target.value.toLowerCase();
 
