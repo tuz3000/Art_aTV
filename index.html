@@ -2,9 +2,12 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>@Art_aTV</title>
+<title>Каталог сериалов @Art_aTV</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
 body{
@@ -14,310 +17,311 @@ body{
   color:white;
 }
 
-/* HEADER (CLEAN STYLE) */
 .header{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
+  padding:14px 16px;
   background:#111;
-  padding:12px 14px;
-  font-weight:900;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  z-index:999;
+  position:sticky;
+  top:0;
+  z-index:10;
 }
 
-/* BRAND */
+.brand{
+  font-size:20px;
+  font-weight:800;
+}
+
 .brand a{
   color:#3aa0ff;
-  font-weight:900;
   text-decoration:none;
 }
 
-/* SUPPORT */
 .support{
-  background:#2a2a2a;
-  padding:8px 12px;
-  border-radius:10px;
-  font-size:13px;
-  font-weight:800;
-  cursor:pointer;
+  position:fixed;
+  right:12px;
+  top:12px;
+  z-index:999;
 }
 
-/* SEARCH */
-.search{
-  margin-top:60px;
-  padding:10px 12px;
+.support a{
+  display:block;
+  background:#2b2b2b;
+  color:#ddd;
+  padding:8px 10px;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:12px;
+  font-weight:600;
 }
 
-.search input{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
+.counter{
+  padding:10px 16px;
+  color:#aaa;
+}
+
+input{
+  width:92%;
+  margin:10px 4%;
+  padding:14px;
+  border-radius:12px;
   border:none;
-  outline:none;
+  background:#1a1a1a;
+  color:white;
 }
 
-/* SECTION */
 .section{
-  padding:12px;
-  font-weight:900;
+  padding:10px 12px;
   color:#3aa0ff;
-}
-
-/* TOP DROPDOWN */
-.top-wrapper{
-  margin:0 12px;
-}
-
-.top-header{
-  background:#1a1a22;
-  padding:10px;
-  border-radius:10px;
-  cursor:pointer;
-  display:flex;
-  justify-content:space-between;
-  font-weight:900;
-}
-
-.top-list{
-  display:none;
-  margin-top:6px;
-}
-
-.top-item{
-  padding:10px;
-  background:#15151c;
-  margin-bottom:6px;
-  border-radius:8px;
-  display:flex;
-  justify-content:space-between;
+  font-weight:700;
   cursor:pointer;
 }
 
-/* CARD */
-.card{
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding:10px;
+}
+
+.item{
   display:flex;
   align-items:center;
   gap:14px;
-  padding:14px;
-  margin:10px 12px;
   background:#15151c;
-  border-radius:12px;
+  padding:12px;
+  border-radius:14px;
+  scroll-margin-top:100px;
+  transition:0.3s;
 }
 
-/* POSTER */
-.card img{
+.item.highlight{
+  outline:2px solid #3aa0ff;
+  transform:scale(1.02);
+}
+
+.poster{
   width:80px;
-  height:115px;
+  height:120px;
   object-fit:cover;
   border-radius:8px;
-  cursor:pointer;
 }
 
-/* TITLE */
 .title{
   flex:1;
-  font-weight:900;
-  font-size:18px;
+  font-size:16px;
+  font-weight:700;
 }
 
-/* BUTTON */
 .btn{
   background:#3aa0ff;
-  padding:9px 12px;
-  border-radius:8px;
+  color:white;
+  padding:10px 12px;
+  border-radius:10px;
   font-size:13px;
-  color:white;
+  font-weight:600;
   text-decoration:none;
-}
-
-/* HIGHLIGHT */
-.highlight{
-  border:2px solid #3aa0ff;
-  box-shadow:0 0 20px rgba(58,160,255,0.6);
-}
-
-/* UP BUTTON FIXED */
-.up-btn{
-  position:fixed;
-  bottom:18px;
-  right:18px;
-  width:52px;
-  height:52px;
-  border-radius:50%;
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.2);
-  color:white;
-  font-size:20px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  z-index:999;
 }
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
+<div class="support">
+  <a href="https://t.me/Art_aTV_support_bot">⚙️ Техподдержка</a>
+</div>
+
 <div class="header">
   <div class="brand">
-    <a href="https://t.me/Art_aTV" target="_blank">@Art_aTV</a>
-  </div>
-
-  <div class="support" onclick="window.open('https://t.me/Art_aTV_support_bot','_blank')">
-    ⚙️ Поддержка
+    Каталог сериалов <a href="https://t.me/Art_aTV">@Art_aTV</a>
   </div>
 </div>
 
-<!-- SEARCH -->
-<div class="search">
-  <input id="search" placeholder="Поиск..." oninput="render()">
+<div class="counter" id="counter">Загрузка...</div>
+
+<input id="search" placeholder="Поиск сериалов...">
+
+<div class="section" onclick="togglePopular()">
+🔥 Популярное ⬇️
 </div>
 
-<!-- TOP DROPDOWN -->
-<div class="section">🔥 ТОП 5 популярных</div>
-
-<div class="top-wrapper">
-  <div class="top-header" onclick="toggleTop()">
-    <span>Показать / скрыть</span>
-    <span>▼</span>
-  </div>
-
-  <div id="topList" class="top-list"></div>
+<div id="popularWrap" style="display:none;">
+  <div class="list" id="popular"></div>
 </div>
 
-<!-- LIST -->
 <div class="section">🎬 Все сериалы</div>
-<div id="list"></div>
-
-<!-- UP -->
-<div class="up-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
+<div class="list" id="list"></div>
 
 <script>
 
+const firebaseConfig = {
+  apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
+  authDomain: "art-atv.firebaseapp.com",
+  projectId: "art-atv",
+  storageBucket: "art-atv.firebasestorage.app",
+  messagingSenderId: "549965698241",
+  appId: "1:549965698241:web:86cfa4dc6048d48d4ef040"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// нормализация ID
+function makeId(title){
+  return "item-" + title.trim().toLowerCase().replace(/\s+/g,"-");
+}
+
+// клики
+function trackClick(title){
+  const key = title.trim().toLowerCase();
+
+  db.collection("clicks").doc(key).set({
+    title: title,
+    count: firebase.firestore.FieldValue.increment(1),
+    time: Date.now()
+  }, { merge:true });
+}
+
+// SHEET
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
-let data = [];
-let clicks = JSON.parse(localStorage.getItem("clicks") || "{}");
+let allData=[];
 
-
-// LOAD
 fetch(SHEET)
 .then(r=>r.text())
 .then(t=>{
 
-  const rows = t.trim().split("\n").slice(1);
+  const rows=t.trim().split("\n").slice(1);
 
-  data = rows.map(r=>{
-    const c = r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+  allData=rows.map(r=>{
+    const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
 
-    return {
-      title: (c[0] || "").trim(),
-      link: (c[1] || "").trim(),
-      poster: (c[2] || "").trim(),
-      kpLink: (c[3] || "").trim()
+    return{
+      title:(c[0]||"").trim(),
+      link:(c[1]||"").trim(),
+      poster:(c[2]||"").trim(),
+      kp:(c[3]||"").trim()
     };
   });
 
-  render();
-  updateTop();
+  document.getElementById("counter").innerText =
+  "🎬 Всего сериалов: " + allData.length;
+
+  render(allData);
+  loadPopular();
 });
 
+// ВСЕ СЕРИАЛЫ
+function render(list){
+  const box=document.getElementById("list");
+  box.innerHTML="";
 
-// SEARCH + LIST
-function render(){
+  list.forEach(i=>{
 
-  const q = document.getElementById("search").value?.toLowerCase() || "";
+    const id = makeId(i.title);
 
-  const box = document.getElementById("list");
-  box.innerHTML = "";
+    box.innerHTML+=`
+    <div class="item" id="${id}">
 
-  data
-  .filter(i=>i.title.toLowerCase().includes(q))
-  .forEach(i=>{
+      <img class="poster"
+        src="${i.poster}"
+        onclick="window.open('${i.kp}','_blank')">
 
-    box.innerHTML += `
-      <div class="card">
+      <div class="title">${i.title}</div>
 
-        <img src="${i.poster}"
-          onclick="openKP('${i.kpLink}')">
+      <a class="btn"
+        href="${i.link}"
+        target="_blank"
+        onclick="trackClick('${i.title}')">
+        Оформить доступ
+      </a>
 
-        <div class="title">${i.title}</div>
+    </div>`;
+  });
+}
 
-        <a class="btn"
-           href="${i.link}"
-           onclick="addClick('${i.title}')"
-           target="_blank">
-           Оформить доступ
-        </a>
+// ПОПУЛЯРНОЕ
+function loadPopular(){
 
+  db.collection("clicks")
+  .get()
+  .then(snap=>{
+
+    let arr=[];
+
+    snap.forEach(doc=>{
+      arr.push(doc.data());
+    });
+
+    arr.sort((a,b)=>(b.count||0)-(a.count||0));
+    arr = arr.slice(0,5);
+
+    renderPopular(arr);
+  });
+}
+
+// ПОПУЛЯРНОЕ (КЛИКАБЕЛЬНОЕ)
+function renderPopular(list){
+  const box=document.getElementById("popular");
+  box.innerHTML="";
+
+  list.forEach(i=>{
+
+    const id = makeId(i.title);
+
+    box.innerHTML+=`
+    <div class="item"
+      style="cursor:pointer"
+      onclick="scrollToItem('${id}')">
+
+      <div class="title">${i.title}</div>
+
+      <div style="color:#3aa0ff;font-weight:700">
+        🔥 ${i.count||0}
       </div>
-    `;
+
+    </div>`;
   });
 }
 
+// СКРОЛЛ + ПОДСВЕТКА
+function scrollToItem(id){
 
-// CLICK SYSTEM
-function addClick(title){
-  clicks[title] = (clicks[title] || 0) + 1;
-  localStorage.setItem("clicks", JSON.stringify(clicks));
-  updateTop();
-}
+  const el = document.getElementById(id);
 
+  if(!el) return;
 
-// TOP UPDATE
-function updateTop(){
-
-  const box = document.getElementById("topList");
-  box.innerHTML = "";
-
-  const sorted = Object.entries(clicks)
-    .sort((a,b)=>b[1]-a[1])
-    .slice(0,5);
-
-  sorted.forEach(([title,count],i)=>{
-
-    box.innerHTML += `
-      <div class="top-item" onclick="goTo('${title}')">
-        <div>${i+1}. ${title}</div>
-        <div>🔥 ${count}</div>
-      </div>
-    `;
+  el.scrollIntoView({
+    behavior:"smooth",
+    block:"center"
   });
+
+  el.classList.add("highlight");
+
+  setTimeout(()=>{
+    el.classList.remove("highlight");
+  },1500);
 }
 
+// раскрытие
+let openPopular=false;
 
-// TOGGLE TOP
-function toggleTop(){
-  const el = document.getElementById("topList");
-  el.style.display = (el.style.display === "block") ? "none" : "block";
+function togglePopular(){
+  openPopular=!openPopular;
+  document.getElementById("popularWrap").style.display =
+  openPopular ? "block" : "none";
 }
 
+// поиск
+document.getElementById("search").addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase();
 
-// GO TO
-function goTo(title){
-
-  document.querySelectorAll(".card").forEach(c=>{
-    if(c.innerText.includes(title)){
-      c.scrollIntoView({behavior:"smooth",block:"center"});
-      c.classList.add("highlight");
-      setTimeout(()=>c.classList.remove("highlight"),2000);
-    }
-  });
-}
-
-
-// KP OPEN
-function openKP(link){
-  if(!link) link="https://www.kinopoisk.ru/";
-  window.open(link,"_blank");
-}
+  render(allData.filter(i=>
+    i.title.toLowerCase().includes(q)
+  ));
+});
 
 </script>
 
