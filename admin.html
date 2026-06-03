@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Art_aTV Admin</title>
+<title>Admin Art_aTV</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -35,59 +35,26 @@ body{
   font-weight:800;
   color:#3aa0ff;
 }
-
-input{
-  width:90%;
-  padding:12px;
-  margin:10px;
-  border-radius:10px;
-  border:none;
-}
-button{
-  padding:10px 14px;
-  border:none;
-  border-radius:10px;
-  background:#3aa0ff;
-  color:white;
-  font-weight:700;
-}
 </style>
 </head>
 
 <body>
 
-<div id="login" class="card">
-  <h2>🔐 Admin вход</h2>
+<div class="header">📊 Admin Panel</div>
 
-  <input id="key" placeholder="Введите ключ">
-  <button onclick="login()">Войти</button>
-
-  <p style="color:#888;font-size:12px;margin-top:10px">
-    Или открой: ?key=art123
-  </p>
+<div class="card">
+  <div class="big" id="online">0</div>
+  🟢 Онлайн
 </div>
 
-<div id="panel" style="display:none">
+<div class="card">
+  <div class="big" id="users">0</div>
+  👤 Пользователи
+</div>
 
-  <div class="header">
-    📊 Art_aTV Admin Panel
-  </div>
-
-  <div class="card">
-    <div class="big" id="online">0</div>
-    🟢 Онлайн
-  </div>
-
-  <div class="card">
-    <div class="big" id="users">0</div>
-    👤 Пользователи
-  </div>
-
-  <div class="card">
-    <div class="big" id="clicks">0</div>
-    🔥 Клики
-  </div>
-
+<div class="card">
+  <div class="big" id="clicks">0</div>
+  🔥 Клики
 </div>
 
 <script>
@@ -106,66 +73,22 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 
-// ================= ACCESS =================
-const ADMIN_KEY = "art123";
+// ================= LIVE =================
+db.collection("online").onSnapshot(snap=>{
+  document.getElementById("online").innerText = snap.size;
+});
 
-function checkAuto(){
+db.collection("analytics").onSnapshot(snap=>{
+  let users = new Set();
+  snap.forEach(d=>users.add(d.data().user_id));
+  document.getElementById("users").innerText = users.size;
+});
 
-  const urlKey = new URLSearchParams(location.search).get("key");
-
-  if(urlKey === ADMIN_KEY){
-    showPanel();
-  }
-}
-
-checkAuto();
-
-function login(){
-
-  const key = document.getElementById("key").value;
-
-  if(key === ADMIN_KEY){
-    showPanel();
-  } else {
-    alert("❌ Неверный ключ");
-  }
-}
-
-function showPanel(){
-  document.getElementById("login").style.display="none";
-  document.getElementById("panel").style.display="block";
-  init();
-}
-
-
-// ================= LIVE DATA =================
-function init(){
-
-  db.collection("online").onSnapshot(snap=>{
-    document.getElementById("online").innerText = snap.size;
-  });
-
-  db.collection("analytics").onSnapshot(snap=>{
-    let set=new Set();
-
-    snap.forEach(d=>{
-      set.add(d.data().user_id);
-    });
-
-    document.getElementById("users").innerText = set.size;
-  });
-
-  db.collection("clicks").onSnapshot(snap=>{
-    let total=0;
-
-    snap.forEach(d=>{
-      total += d.data().count || 0;
-    });
-
-    document.getElementById("clicks").innerText = total;
-  });
-
-}
+db.collection("clicks").onSnapshot(snap=>{
+  let total=0;
+  snap.forEach(d=>total += d.data().count||0);
+  document.getElementById("clicks").innerText = total;
+});
 
 </script>
 
