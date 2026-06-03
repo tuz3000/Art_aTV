@@ -30,18 +30,21 @@ body{
   text-decoration:none;
 }
 
-/* SUPPORT */
+/* SUPPORT BUTTON */
 .support-btn{
   position:fixed;
   top:12px;
   right:12px;
   background:#2a2a2a;
-  color:#ddd;
-  padding:8px 12px;
+  color:#fff;
+  padding:10px 12px;
   border-radius:10px;
-  font-size:12px;
+  font-size:13px;
+  font-weight:800;
   cursor:pointer;
   z-index:999;
+  text-decoration:none;
+  display:inline-block;
 }
 
 /* TOP */
@@ -75,12 +78,11 @@ body{
   cursor:pointer;
 }
 
-/* TITLE BIG + BOLD */
+/* TITLE */
 .title{
   flex:1;
   font-weight:900;
-  font-size:20px;
-  line-height:1.2;
+  font-size:18px;
 }
 
 /* BUTTON */
@@ -94,14 +96,7 @@ body{
   white-space:nowrap;
 }
 
-/* HIGHLIGHT */
-.highlight{
-  border:2px solid #3aa0ff;
-  box-shadow:0 0 20px rgba(58,160,255,0.6);
-  transform:scale(1.02);
-}
-
-/* UP BUTTON */
+/* UP */
 .up-btn{
   position:fixed;
   bottom:18px;
@@ -120,49 +115,17 @@ body{
   cursor:pointer;
   z-index:999;
 }
-
-/* MODAL */
-.modal{
-  display:none;
-  position:fixed;
-  top:0;left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.85);
-  z-index:1000;
-}
-
-.modal-content{
-  background:#15151c;
-  width:90%;
-  margin:20% auto;
-  padding:16px;
-  border-radius:12px;
-  text-align:center;
-}
-
-.modal img{
-  width:100%;
-  border-radius:10px;
-  margin-bottom:10px;
-}
-
-.modal a{
-  display:inline-block;
-  padding:10px 14px;
-  background:#3aa0ff;
-  color:white;
-  border-radius:8px;
-  text-decoration:none;
-}
 </style>
 </head>
 
 <body>
 
-<div class="support-btn" onclick="window.open('https://t.me/Art_aTV','_blank')">
-Поддержка
-</div>
+<!-- ⚙️ SUPPORT -->
+<a class="support-btn"
+   href="https://t.me/Art_aTV_support_bot"
+   target="_blank">
+⚙️ Поддержка
+</a>
 
 <div class="header">
 Каталог <a href="https://t.me/Art_aTV" target="_blank">@Art_aTV</a>
@@ -176,11 +139,6 @@ body{
 
 <div class="up-btn" onclick="scrollTopPage()">↑</div>
 
-<!-- MODAL -->
-<div class="modal" id="modal" onclick="closeModal()">
-  <div class="modal-content" id="modalContent"></div>
-</div>
-
 <script>
 
 const firebaseConfig = {
@@ -192,10 +150,13 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+let data = [];
 
-// CLICK
+
+// CLICK TRACK
 function trackClick(title){
   const ref = db.collection("clicks").doc(title);
+
   ref.set({
     title:title,
     count:firebase.firestore.FieldValue.increment(1)
@@ -203,48 +164,54 @@ function trackClick(title){
 }
 
 
-// REALTIME SERIES
+// ================= REALTIME SERIES (FIXED) =================
 db.collection("series").onSnapshot(snap=>{
 
   data = [];
 
   snap.forEach(doc=>{
+
     const d = doc.data();
 
     data.push({
-      title: d.title || "",
-      link: d.link || "",
+      title: d.title || "Без названия",
+      link: d.link || "#",
       poster: d.poster || "",
-      kpLink: d["Ссылка на КП"] || d.kpLink || ""   // 🔥 ВАЖНЫЙ ФИКС
+      kpLink: d["Ссылка на КП"] || d.kpLink || ""
     });
+
   });
 
   render();
 });
 
 
-// RENDER
+// ================= RENDER =================
 function render(){
 
-  const box=document.getElementById("list");
-  box.innerHTML="";
+  const box = document.getElementById("list");
+  box.innerHTML = "";
+
+  if(!data.length){
+    box.innerHTML = "<p style='padding:12px;color:#888'>Список пуст...</p>";
+    return;
+  }
 
   data.forEach(i=>{
 
-    box.innerHTML+=`
+    box.innerHTML += `
       <div class="card">
 
-        <!-- 🔥 ПОСТЕР = ОТКРЫВАЕТ KP -->
         <img src="${i.poster}"
           onclick="openKP('${i.kpLink}')">
 
         <div class="title">${i.title}</div>
 
         <a class="btn"
-          href="${i.link}"
-          target="_blank"
-          onclick="trackClick('${i.title}')">
-          Оформить доступ
+           href="${i.link}"
+           target="_blank"
+           onclick="trackClick('${i.title}')">
+           Оформить доступ
         </a>
 
       </div>
@@ -253,18 +220,18 @@ function render(){
 }
 
 
-// OPEN KP FROM POSTER
-function openKP(kpLink){
+// OPEN KP
+function openKP(link){
 
-  if(!kpLink){
-    kpLink="https://www.kinopoisk.ru/";
+  if(!link || link.length < 5){
+    link = "https://www.kinopoisk.ru/";
   }
 
-  window.open(kpLink, "_blank");
+  window.open(link, "_blank");
 }
 
 
-// TOP
+// ================= TOP =================
 db.collection("clicks").onSnapshot(snap=>{
 
   let arr=[];
@@ -272,7 +239,8 @@ db.collection("clicks").onSnapshot(snap=>{
   snap.forEach(d=>arr.push(d.data()));
 
   arr.sort((a,b)=>(b.count||0)-(a.count||0));
-  arr=arr.slice(0,5);
+
+  arr = arr.slice(0,5);
 
   const box=document.getElementById("top");
   box.innerHTML="";
@@ -280,7 +248,7 @@ db.collection("clicks").onSnapshot(snap=>{
   arr.forEach((i,index)=>{
 
     box.innerHTML+=`
-      <div class="top" onclick="goTo('${i.title}')">
+      <div class="top">
         <div>${index+1}. ${i.title}</div>
         <div>🔥 ${i.count||0}</div>
       </div>
@@ -290,29 +258,9 @@ db.collection("clicks").onSnapshot(snap=>{
 });
 
 
-// GO TO
-function goTo(title){
-
-  document.querySelectorAll(".card").forEach(c=>{
-    if(c.innerText.includes(title)){
-      c.scrollIntoView({behavior:"smooth",block:"center"});
-      c.classList.add("highlight");
-
-      setTimeout(()=>c.classList.remove("highlight"),2500);
-    }
-  });
-}
-
-
-// SCROLL TOP
+// SCROLL
 function scrollTopPage(){
   window.scrollTo({top:0,behavior:"smooth"});
-}
-
-
-// CLOSE MODAL
-function closeModal(){
-  document.getElementById("modal").style.display="none";
 }
 
 </script>
