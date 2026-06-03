@@ -30,7 +30,7 @@ body{
   text-decoration:none;
 }
 
-/* SUPPORT BUTTON */
+/* SUPPORT */
 .support-btn{
   position:fixed;
   top:12px;
@@ -43,8 +43,6 @@ body{
   font-weight:800;
   cursor:pointer;
   z-index:999;
-  text-decoration:none;
-  display:inline-block;
 }
 
 /* TOP */
@@ -115,17 +113,21 @@ body{
   cursor:pointer;
   z-index:999;
 }
+
+/* HIGHLIGHT */
+.highlight{
+  border:2px solid #3aa0ff;
+  box-shadow:0 0 20px rgba(58,160,255,0.6);
+  transform:scale(1.02);
+}
 </style>
 </head>
 
 <body>
 
-<!-- ⚙️ SUPPORT -->
-<a class="support-btn"
-   href="https://t.me/Art_aTV_support_bot"
-   target="_blank">
+<div class="support-btn" onclick="window.open('https://t.me/Art_aTV_support_bot','_blank')">
 ⚙️ Поддержка
-</a>
+</div>
 
 <div class="header">
 Каталог <a href="https://t.me/Art_aTV" target="_blank">@Art_aTV</a>
@@ -141,45 +143,28 @@ body{
 
 <script>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
-  authDomain: "art-atv.firebaseapp.com",
-  projectId: "art-atv"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const SHEET =
+"https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
 let data = [];
 
 
-// CLICK TRACK
-function trackClick(title){
-  const ref = db.collection("clicks").doc(title);
+// ================= LOAD SHEET =================
+fetch(SHEET)
+.then(r=>r.text())
+.then(t=>{
 
-  ref.set({
-    title:title,
-    count:firebase.firestore.FieldValue.increment(1)
-  },{merge:true});
-}
+  const rows = t.trim().split("\n").slice(1);
 
+  data = rows.map(r=>{
+    const c = r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
 
-// ================= REALTIME SERIES (FIXED) =================
-db.collection("series").onSnapshot(snap=>{
-
-  data = [];
-
-  snap.forEach(doc=>{
-
-    const d = doc.data();
-
-    data.push({
-      title: d.title || "Без названия",
-      link: d.link || "#",
-      poster: d.poster || "",
-      kpLink: d["Ссылка на КП"] || d.kpLink || ""
-    });
-
+    return {
+      title: (c[0] || "").trim(),
+      link: (c[1] || "").trim(),
+      poster: (c[2] || "").trim(),
+      kpLink: (c[3] || "").trim()
+    };
   });
 
   render();
@@ -192,11 +177,6 @@ function render(){
   const box = document.getElementById("list");
   box.innerHTML = "";
 
-  if(!data.length){
-    box.innerHTML = "<p style='padding:12px;color:#888'>Список пуст...</p>";
-    return;
-  }
-
   data.forEach(i=>{
 
     box.innerHTML += `
@@ -208,10 +188,9 @@ function render(){
         <div class="title">${i.title}</div>
 
         <a class="btn"
-           href="${i.link}"
-           target="_blank"
-           onclick="trackClick('${i.title}')">
-           Оформить доступ
+          href="${i.link}"
+          target="_blank">
+          Оформить доступ
         </a>
 
       </div>
@@ -220,7 +199,7 @@ function render(){
 }
 
 
-// OPEN KP
+// ================= OPEN KP =================
 function openKP(link){
 
   if(!link || link.length < 5){
@@ -231,34 +210,43 @@ function openKP(link){
 }
 
 
-// ================= TOP =================
-db.collection("clicks").onSnapshot(snap=>{
+// ================= TOP (DEMO SIMPLE) =================
+function loadTop(){
 
-  let arr=[];
+  const box = document.getElementById("top");
 
-  snap.forEach(d=>arr.push(d.data()));
+  const top5 = data.slice(0,5);
 
-  arr.sort((a,b)=>(b.count||0)-(a.count||0));
+  box.innerHTML = "";
 
-  arr = arr.slice(0,5);
+  top5.forEach((i,index)=>{
 
-  const box=document.getElementById("top");
-  box.innerHTML="";
-
-  arr.forEach((i,index)=>{
-
-    box.innerHTML+=`
-      <div class="top">
+    box.innerHTML += `
+      <div class="top" onclick="goTo('${i.title}')">
         <div>${index+1}. ${i.title}</div>
-        <div>🔥 ${i.count||0}</div>
       </div>
     `;
   });
+}
 
-});
+setTimeout(loadTop, 1000);
 
 
-// SCROLL
+// ================= GO TO =================
+function goTo(title){
+
+  document.querySelectorAll(".card").forEach(c=>{
+    if(c.innerText.includes(title)){
+      c.scrollIntoView({behavior:"smooth",block:"center"});
+      c.classList.add("highlight");
+
+      setTimeout(()=>c.classList.remove("highlight"),2500);
+    }
+  });
+}
+
+
+// ================= SCROLL =================
 function scrollTopPage(){
   window.scrollTo({top:0,behavior:"smooth"});
 }
