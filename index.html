@@ -2,7 +2,9 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Netflix 3.0 Admin</title>
+<title>Netflix 3.0 @Art_aTV</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -15,68 +17,214 @@ body{
   color:white;
 }
 
+.header{
+  padding:16px;
+  font-size:18px;
+  font-weight:800;
+  background:#111;
+}
+
+.section{
+  padding:12px;
+  color:#3aa0ff;
+  font-weight:800;
+}
+
 .card{
-  margin:12px;
-  padding:14px;
+  display:flex;
+  gap:12px;
+  padding:12px;
+  margin:10px 12px;
   background:#15151c;
   border-radius:12px;
+  transition:0.3s;
 }
 
-.big{
-  font-size:22px;
-  font-weight:800;
-  color:#3aa0ff;
+.card img{
+  width:70px;
+  height:100px;
+  object-fit:cover;
+  border-radius:6px;
 }
 
+.title{
+  font-weight:700;
+}
+
+.btn{
+  margin-top:6px;
+  display:inline-block;
+  padding:6px 10px;
+  background:#3aa0ff;
+  color:white;
+  border-radius:8px;
+  font-size:12px;
+  text-decoration:none;
+}
+
+/* TOP */
 .top{
-  margin:6px 0;
+  display:flex;
+  justify-content:space-between;
+  margin:6px 12px;
+  padding:10px;
+  background:#1a1a22;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* highlight */
+.highlight{
+  border:2px solid #3aa0ff;
+  box-shadow:0 0 20px rgba(58,160,255,0.6);
+  transform:scale(1.02);
 }
 </style>
 </head>
 
 <body>
 
-<div class="card">
-  <div class="big" id="clicks">0</div>
-  🔥 Total clicks
-</div>
+<div class="header">🎬 Netflix 3.0 @Art_aTV</div>
 
-<div class="card">
-  <div class="big">TOP 5</div>
-  <div id="top"></div>
-</div>
+<div class="section">🔥 ТОП 5 популярных</div>
+<div id="top"></div>
+
+<div class="section">🎬 Все сериалы</div>
+<div id="list"></div>
 
 <script>
 
+// ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
-  projectId: "art-atv"
+  projectId: "art-atv",
+  storageBucket: "art-atv.firebasestorage.app",
+  messagingSenderId: "549965698241",
+  appId: "1:549965698241:web:86cfa4dc6048d48d4ef040"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-db.collection("clicks").onSnapshot(snap=>{
 
-  let total=0;
-  let arr=[];
+// ================= CLICK =================
+function trackClick(title){
+  const ref = db.collection("clicks").doc(title);
 
-  snap.forEach(d=>{
-    total+=d.data().count||0;
-    arr.push(d.data());
+  ref.set({
+    title:title,
+    count:firebase.firestore.FieldValue.increment(1)
+  },{merge:true});
+}
+
+
+// ================= LOAD DATA =================
+const SHEET =
+"https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
+
+let data = [];
+
+fetch(SHEET)
+.then(r => r.text())
+.then(t => {
+
+  const rows = t.trim().split("\n").slice(1);
+
+  data = rows.map(r => {
+    const c = r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+
+    return {
+      title: (c[0] || "").trim(),
+      link: (c[1] || "").trim(),
+      poster: (c[2] || "").trim(),
+      kp: (c[3] || "").trim()
+    };
   });
 
-  document.getElementById("clicks").innerText=total;
-
-  arr.sort((a,b)=>(b.count||0)-(a.count||0));
-
-  document.getElementById("top").innerHTML =
-    arr.slice(0,5).map((i,index)=>
-      `${index+1}. ${i.title} (${i.count})`
-    ).join("<br>");
-
+  render();
+  loadTop();
 });
+
+
+// ================= RENDER =================
+function render(){
+
+  const box = document.getElementById("list");
+  box.innerHTML = "";
+
+  data.forEach(i => {
+
+    const id = "card-" + i.title.replaceAll(" ","_");
+
+    box.innerHTML += `
+      <div class="card" id="${id}">
+
+        <img src="${i.poster}">
+
+        <div>
+          <div class="title">${i.title}</div>
+
+          <a class="btn"
+            href="${i.link}"
+            target="_blank"
+            onclick="trackClick('${i.title}')">
+            Смотреть
+          </a>
+        </div>
+
+      </div>
+    `;
+  });
+}
+
+
+// ================= TOP =================
+function loadTop(){
+
+  db.collection("clicks").onSnapshot(snap => {
+
+    let arr = [];
+
+    snap.forEach(d => arr.push(d.data()));
+
+    arr.sort((a,b) => (b.count||0) - (a.count||0));
+
+    arr = arr.slice(0,5);
+
+    const box = document.getElementById("top");
+    box.innerHTML = "";
+
+    arr.forEach((i,index) => {
+
+      box.innerHTML += `
+        <div class="top" onclick="goTo('${i.title}')">
+          <div>${index+1}. ${i.title}</div>
+          <div>🔥 ${i.count||0}</div>
+        </div>
+      `;
+    });
+
+  });
+}
+
+
+// ================= SCROLL + HIGHLIGHT =================
+function goTo(title){
+
+  const id = "card-" + title.replaceAll(" ","_");
+  const el = document.getElementById(id);
+
+  if(!el) return;
+
+  el.scrollIntoView({behavior:"smooth",block:"center"});
+
+  el.classList.add("highlight");
+
+  setTimeout(() => {
+    el.classList.remove("highlight");
+  }, 2500);
+}
 
 </script>
 
