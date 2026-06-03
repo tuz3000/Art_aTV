@@ -1,3 +1,11 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Catalog</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body {
   margin:0;
@@ -6,7 +14,7 @@ body {
   color:white;
 }
 
-/* поиск */
+/* ПОИСК */
 input {
   width:92%;
   margin:14px 4%;
@@ -18,7 +26,7 @@ input {
   font-size:17px;
 }
 
-/* список */
+/* СПИСОК */
 .list {
   display:flex;
   flex-direction:column;
@@ -26,7 +34,7 @@ input {
   padding:12px;
 }
 
-/* карточка — ещё крупнее */
+/* КАРТОЧКА */
 .item {
   display:flex;
   align-items:center;
@@ -37,7 +45,7 @@ input {
   min-height:130px;
 }
 
-/* ПОСТЕР — СИЛЬНО КРУПНЕЕ */
+/* ПОСТЕР */
 .poster {
   width:95px;
   height:140px;
@@ -47,7 +55,7 @@ input {
   flex-shrink:0;
 }
 
-/* НАЗВАНИЕ — КРУПНОЕ */
+/* НАЗВАНИЕ */
 .title {
   flex:1;
   font-size:18px;
@@ -55,7 +63,7 @@ input {
   line-height:1.2;
 }
 
-/* кнопка */
+/* КНОПКА */
 .btn {
   background:#3aa0ff;
   color:white;
@@ -69,11 +77,12 @@ input {
   box-shadow:0 6px 14px rgba(58,160,255,0.35);
 }
 
+/* эффект нажатия */
 .btn:active {
   transform:scale(0.95);
 }
 
-/* адаптация под телефон */
+/* МОБИЛЬНАЯ АДАПТАЦИЯ */
 @media (max-width: 500px) {
 
   .item {
@@ -96,3 +105,80 @@ input {
   }
 }
 </style>
+</head>
+
+<body>
+
+<input id="search" placeholder="Поиск сериалов...">
+
+<div class="list" id="list"></div>
+
+<script>
+
+const SHEET =
+"https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
+
+let data = [];
+
+fetch(SHEET)
+.then(r => r.text())
+.then(t => {
+
+    const rows = t.trim().split("\n").slice(1);
+
+    data = rows.map(r => {
+        const cols = r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+
+        return {
+            title: (cols[0] || "").trim(),
+            link: (cols[1] || "").trim(),
+            poster: (cols[2] || "").trim(),
+            kp: (cols[3] || "").trim()
+        };
+    });
+
+    render(data);
+});
+
+function render(list){
+    const box = document.getElementById("list");
+    box.innerHTML = "";
+
+    list.forEach(i => {
+        if(!i.title) return;
+
+        box.innerHTML += `
+        <div class="item">
+
+            <!-- постер → Kinopoisk -->
+            <img class="poster"
+                 src="${i.poster}"
+                 onclick="window.open('${i.kp}','_blank')">
+
+            <!-- название -->
+            <div class="title">${i.title}</div>
+
+            <!-- кнопка → бот -->
+            <a class="btn"
+               href="${i.link}"
+               target="_blank"
+               rel="noopener noreferrer">
+               Оформить доступ
+            </a>
+
+        </div>`;
+    });
+}
+
+/* поиск */
+document.getElementById("search").addEventListener("input", e => {
+    const q = e.target.value.toLowerCase();
+    render(data.filter(i =>
+        (i.title || "").toLowerCase().includes(q)
+    ));
+});
+
+</script>
+
+</body>
+</html>
