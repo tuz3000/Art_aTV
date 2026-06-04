@@ -114,6 +114,9 @@ input{
   padding:18px 16px 10px;
   font-weight:900;
   cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 .section span{
@@ -297,17 +300,22 @@ input{
 <input id="search" placeholder="Поиск сериалов...">
 
 <div class="section" onclick="togglePopular()">
-<span>TOP 5</span> популярных ▾
+  <div><span>TOP 5</span> популярных</div>
+  <div id="popularArrow">▾</div>
 </div>
 
 <div id="popularWrap" style="display:none;">
   <div class="list" id="popular"></div>
 </div>
 
-<div class="section">
-<span>NEW</span> Новинки
+<div class="section" onclick="toggleNew()">
+  <div><span>NEW</span> Новинки</div>
+  <div id="newArrow">▾</div>
 </div>
-<div class="list" id="newList"></div>
+
+<div id="newWrap" style="display:none;">
+  <div class="list" id="newList"></div>
+</div>
 
 <div class="section">🎬 Все сериалы</div>
 <div class="list" id="list"></div>
@@ -341,6 +349,19 @@ const db = firebase.firestore();
 let tg = window.Telegram?.WebApp;
 if(tg){ tg.expand(); }
 
+function normalizeTitle(title){
+  return String(title || "")
+    .toLowerCase()
+    .replace(/ё/g,"е")
+    .replace(/[^a-zа-я0-9]+/gi," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function makeId(title){
+  return "item-" + normalizeTitle(title).replace(/\s+/g,"-");
+}
+
 function getUser(){
   const u = tg?.initDataUnsafe?.user;
 
@@ -373,9 +394,8 @@ const currentUser = getUser();
 
 function saveUserVisit(){
   const now = Date.now();
-  const ref = db.collection("users").doc(currentUser.id);
 
-  ref.set({
+  db.collection("users").doc(currentUser.id).set({
     id:currentUser.id,
     username:currentUser.username,
     first_name:currentUser.first_name,
@@ -406,6 +426,7 @@ function saveUserVisit(){
 }
 
 saveUserVisit();
+
 setInterval(()=>{
   db.collection("online").doc(currentUser.id).set({
     user_id:currentUser.id,
@@ -414,10 +435,6 @@ setInterval(()=>{
     last_seen:Date.now()
   },{merge:true});
 },30000);
-
-function makeId(title){
-  return "item-" + title.trim().toLowerCase().replace(/\s+/g,"-");
-}
 
 function saveEvent(type,title=""){
   db.collection("events").add({
@@ -431,7 +448,7 @@ function saveEvent(type,title=""){
 }
 
 function trackClick(title){
-  const key = title.trim().toLowerCase();
+  const key = normalizeTitle(title);
 
   db.collection("clicks").doc(key).set({
     title:title,
@@ -482,14 +499,14 @@ function render(list){
   const box=document.getElementById("list");
   box.innerHTML="";
 
-  list.forEach((i,index)=>{
+  list.forEach((i)=>{
     const id = makeId(i.title);
 
     box.innerHTML+=`
-    <div class="item" id="${id}">
+    <div class="item" id="${id}" data-title="${normalizeTitle(i.title)}">
       <img class="poster"
         src="${i.poster}"
-        onclick="openPoster(${index})">
+        onclick="openPosterByTitle(${JSON.stringify(i.title)})">
 
       <div class="title">${i.title}</div>
 
@@ -508,11 +525,9 @@ function renderNew(list){
   box.innerHTML="";
 
   list.slice(-5).reverse().forEach((i)=>{
-    const index = allData.findIndex(x=>x.title===i.title);
-
     box.innerHTML+=`
-    <div class="item">
-      <img class="poster" src="${i.poster}" onclick="openPoster(${index})">
+    <div class="item" data-title="${normalizeTitle(i.title)}">
+      <img class="poster" src="${i.poster}" onclick="openPosterByTitle(${JSON.stringify(i.title)})">
       <div class="title">${i.title}</div>
       <a class="btn"
         href="${i.link}"
@@ -524,8 +539,11 @@ function renderNew(list){
   });
 }
 
-function openPoster(index){
-  const i = allData[index];
+function openPosterByTitle(title){
+  const i = allData.find(x=>normalizeTitle(x.title) === normalizeTitle(title))
+    || allData.find(x=>normalizeTitle(x.title).includes(normalizeTitle(title)))
+    || allData.find(x=>normalizeTitle(title).includes(normalizeTitle(x.title)));
+
   if(!i) return;
 
   trackPoster(i.title);
@@ -572,40 +590,82 @@ function renderPopular(list){
   box.innerHTML="";
 
   list.forEach((i,index)=>{
-    const id = makeId(i.title);
     const num = String(index + 1).padStart(2,"0");
 
     box.innerHTML+=`
-    <div class="item" style="cursor:pointer" onclick="scrollToItem('${id}')">
+    <div class="item" style="cursor:pointer" onclick="scrollToTitle(${JSON.stringify(i.title)})">
       <div class="title">${num}. ${i.title}</div>
       <div style="color:var(--gold);font-weight:900">🔥 ${i.count||0}</div>
     </div>`;
   });
 }
 
-function scrollToItem(id){
-  const el = document.getElementById(id);
-  if(!el) return;
-
-  el.scrollIntoView({behavior:"smooth",block:"center"});
-  el.classList.add("highlight");
+function scrollToTitle(title){
+  document.getElementById("search").value = "";
+  render(allData);
 
   setTimeout(()=>{
-    el.classList.remove("highlight");
-  },1800);
+    const target = normalizeTitle(title);
+    const items = document.querySelectorAll("#list .item");
+
+    let found = null;
+
+    items.forEach(el=>{
+      const itemTitle = el.getAttribute("data-title") || "";
+      if(itemTitle === target){
+        found = el;
+      }
+    });
+
+    if(!found){
+      items.forEach(el=>{
+        const itemTitle = el.getAttribute("data-title") || "";
+        if(itemTitle.includes(target) || target.includes(itemTitle)){
+          found = el;
+        }
+      });
+    }
+
+    if(!found) return;
+
+    found.scrollIntoView({
+      behavior:"smooth",
+      block:"center"
+    });
+
+    found.classList.add("highlight");
+
+    setTimeout(()=>{
+      found.classList.remove("highlight");
+    },1800);
+  },80);
 }
 
 let openPopular=false;
+let openNew=false;
 
 function togglePopular(){
   openPopular=!openPopular;
   document.getElementById("popularWrap").style.display =
   openPopular ? "block" : "none";
+  document.getElementById("popularArrow").innerText =
+  openPopular ? "▴" : "▾";
+}
+
+function toggleNew(){
+  openNew=!openNew;
+  document.getElementById("newWrap").style.display =
+  openNew ? "block" : "none";
+  document.getElementById("newArrow").innerText =
+  openNew ? "▴" : "▾";
 }
 
 document.getElementById("search").addEventListener("input",e=>{
-  const q=e.target.value.toLowerCase();
-  render(allData.filter(i=>i.title.toLowerCase().includes(q)));
+  const q=normalizeTitle(e.target.value);
+
+  render(allData.filter(i=>
+    normalizeTitle(i.title).includes(q)
+  ));
 });
 
 function scrollToTop(){
