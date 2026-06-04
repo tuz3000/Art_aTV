@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Каталог @Art_aTV</title>
+<title>Art_aTV</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -10,164 +10,256 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
+:root{
+  --bg:#050505;
+  --card:#111114;
+  --card2:#18181d;
+  --white:#ffffff;
+  --muted:#9b9b9b;
+  --gold:#f6c453;
+}
+
+*{
+  box-sizing:border-box;
+}
+
 body{
   margin:0;
-  font-family:Arial;
-  background:#0b0b0f;
+  font-family:Arial, sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(255,255,255,0.06), transparent 28%),
+    #050505;
   color:white;
 }
 
+/* HEADER */
 .header{
-  padding:14px 16px;
-  background:#111;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
   position:sticky;
   top:0;
-  z-index:10;
+  z-index:20;
+  padding:18px 16px 14px;
+  background:rgba(5,5,5,0.88);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,0.06);
 }
 
 .brand{
-  font-size:20px;
-  font-weight:800;
+  display:flex;
+  flex-direction:column;
+  line-height:1.1;
+}
+
+.logo-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.logo-a{
+  font-size:32px;
+  font-weight:900;
+  letter-spacing:-2px;
+}
+
+.play{
+  width:0;
+  height:0;
+  border-top:8px solid transparent;
+  border-bottom:8px solid transparent;
+  border-left:13px solid var(--gold);
 }
 
 .brand a{
-  color:#3aa0ff;
+  color:white;
   text-decoration:none;
+  font-size:24px;
+  font-weight:900;
 }
 
+.subtitle{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:12px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+
+/* SUPPORT */
 .support{
   position:fixed;
   right:12px;
-  top:12px;
+  top:14px;
   z-index:999;
 }
 
 .support a{
   display:block;
-  background:#2b2b2b;
-  color:#ddd;
-  padding:8px 10px;
-  border-radius:10px;
+  background:rgba(246,196,83,0.16);
+  color:var(--gold);
+  padding:9px 12px;
+  border:1px solid rgba(246,196,83,0.25);
+  border-radius:12px;
   text-decoration:none;
   font-size:12px;
-  font-weight:600;
+  font-weight:800;
+  backdrop-filter:blur(12px);
 }
 
+/* COUNTER */
 .counter{
-  padding:10px 16px;
-  color:#aaa;
+  padding:12px 16px 4px;
+  color:var(--muted);
+  font-size:13px;
 }
 
+/* SEARCH */
 input{
   width:92%;
   margin:10px 4%;
-  padding:14px;
-  border-radius:12px;
-  border:none;
-  background:#1a1a1a;
+  padding:15px 16px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.06);
   color:white;
+  font-size:16px;
+  outline:none;
+  backdrop-filter:blur(12px);
 }
 
+input::placeholder{
+  color:#777;
+}
+
+/* SECTION */
 .section{
-  padding:10px 12px;
-  color:#3aa0ff;
-  font-weight:700;
+  padding:18px 16px 10px;
+  color:white;
+  font-weight:900;
+  letter-spacing:.4px;
   cursor:pointer;
 }
 
+.section span{
+  color:var(--gold);
+}
+
+/* LIST */
 .list{
   display:flex;
   flex-direction:column;
-  gap:12px;
-  padding:10px;
+  gap:14px;
+  padding:10px 12px;
 }
 
+/* CARD */
 .item{
   display:flex;
   align-items:center;
   gap:14px;
-  background:#15151c;
+  background:linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025));
+  border:1px solid rgba(255,255,255,0.07);
   padding:12px;
-  border-radius:14px;
-  scroll-margin-top:100px;
-  transition:0.3s;
+  border-radius:18px;
+  scroll-margin-top:120px;
+  transition:.25s ease;
+  box-shadow:0 12px 30px rgba(0,0,0,0.28);
 }
 
 .item.highlight{
-  outline:2px solid #3aa0ff;
+  outline:2px solid var(--gold);
+  box-shadow:0 0 28px rgba(246,196,83,0.45);
   transform:scale(1.02);
 }
 
+/* POSTER */
 .poster{
-  width:80px;
-  height:120px;
+  width:86px;
+  height:128px;
   object-fit:cover;
-  border-radius:8px;
+  border-radius:12px;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(0,0,0,0.45);
 }
 
+/* TITLE */
 .title{
   flex:1;
-  font-size:16px;
-  font-weight:700;
-}
-
-.btn{
-  background:#3aa0ff;
+  font-size:18px;
+  line-height:1.2;
+  font-weight:900;
   color:white;
-  padding:10px 12px;
-  border-radius:10px;
-  font-size:13px;
-  font-weight:600;
-  text-decoration:none;
 }
 
-/* ===== СТРЕЛКА НАВЕРХ ===== */
+/* BUTTON */
+.btn{
+  background:white;
+  color:#050505;
+  padding:10px 13px;
+  border-radius:12px;
+  font-size:13px;
+  font-weight:900;
+  text-decoration:none;
+  white-space:nowrap;
+}
+
+/* POPULAR */
+#popular .item{
+  background:rgba(246,196,83,0.08);
+  border:1px solid rgba(246,196,83,0.18);
+}
+
+#popular .title{
+  color:white;
+}
+
+/* SCROLL TOP */
 #scrollTopBtn{
   position:fixed;
   right:18px;
   bottom:18px;
   width:54px;
   height:54px;
-
   display:flex;
   align-items:center;
   justify-content:center;
-
   border:none;
   border-radius:50%;
-
   background:rgba(255,255,255,0.08);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
   box-shadow:
     0 4px 18px rgba(0,0,0,0.35),
     inset 0 1px 0 rgba(255,255,255,0.15);
-
-  color:#ffffff;
+  color:white;
   font-size:24px;
   cursor:pointer;
   z-index:9999;
-
-  transition:
-    transform .2s ease,
-    background .2s ease,
-    box-shadow .2s ease;
+  transition:.2s ease;
 }
 
 #scrollTopBtn:hover{
   transform:translateY(-3px);
-  background:rgba(255,255,255,0.14);
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.15);
 }
 
-#scrollTopBtn:active{
-  transform:translateY(0);
+@media(max-width:480px){
+  .brand a{
+    font-size:22px;
+  }
+
+  .title{
+    font-size:17px;
+  }
+
+  .btn{
+    font-size:12px;
+    padding:9px 10px;
+  }
+
+  .poster{
+    width:82px;
+    height:122px;
+  }
 }
 </style>
 </head>
@@ -175,12 +267,17 @@ input{
 <body>
 
 <div class="support">
-  <a href="https://t.me/Art_aTV_support_bot">⚙️ Поддержка</a>
+  <a href="https://t.me/Art_aTV_support_bot">🤖 Поддержка</a>
 </div>
 
 <div class="header">
   <div class="brand">
-     Каталог <a href="https://t.me/Art_aTV">@Art_aTV</a>
+    <div class="logo-row">
+      <div class="logo-a">A</div>
+      <div class="play"></div>
+      <a href="https://t.me/Art_aTV">@Art_aTV</a>
+    </div>
+    <div class="subtitle">Каталог сериалов</div>
   </div>
 </div>
 
@@ -189,7 +286,7 @@ input{
 <input id="search" placeholder="Поиск сериалов...">
 
 <div class="section" onclick="togglePopular()">
-🔥 Популярное ▾
+<span>TOP 5</span> популярных ▾
 </div>
 
 <div id="popularWrap" style="display:none;">
@@ -199,7 +296,6 @@ input{
 <div class="section">🎬 Все сериалы</div>
 <div class="list" id="list"></div>
 
-<!-- КНОПКА НАВЕРХ -->
 <button id="scrollTopBtn" onclick="scrollToTop()">↑</button>
 
 <script>
@@ -216,12 +312,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// нормализация ID
 function makeId(title){
   return "item-" + title.trim().toLowerCase().replace(/\s+/g,"-");
 }
 
-// клики
 function trackClick(title){
   const key = title.trim().toLowerCase();
 
@@ -232,7 +326,6 @@ function trackClick(title){
   }, { merge:true });
 }
 
-// SHEET
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
@@ -262,7 +355,6 @@ fetch(SHEET)
   loadPopular();
 });
 
-// ВСЕ СЕРИАЛЫ
 function render(list){
   const box=document.getElementById("list");
   box.innerHTML="";
@@ -284,18 +376,17 @@ function render(list){
         href="${i.link}"
         target="_blank"
         onclick="trackClick('${i.title}')">
-        Оформить доступ
+        ▶ Доступ
       </a>
 
     </div>`;
   });
 }
 
-// ПОПУЛЯРНОЕ
 function loadPopular(){
 
   db.collection("clicks")
-  .onSnapshot(snap=>{ // 🔥 live
+  .onSnapshot(snap=>{
     let arr=[];
 
     snap.forEach(doc=>{
@@ -309,23 +400,23 @@ function loadPopular(){
   });
 }
 
-// ПОПУЛЯРНОЕ (КЛИКАБЕЛЬНОЕ)
 function renderPopular(list){
   const box=document.getElementById("popular");
   box.innerHTML="";
 
-  list.forEach(i=>{
+  list.forEach((i,index)=>{
 
     const id = makeId(i.title);
+    const num = String(index + 1).padStart(2,"0");
 
     box.innerHTML+=`
     <div class="item"
       style="cursor:pointer"
       onclick="scrollToItem('${id}')">
 
-      <div class="title">${i.title}</div>
+      <div class="title">${num}. ${i.title}</div>
 
-      <div style="color:#3aa0ff;font-weight:700">
+      <div style="color:var(--gold);font-weight:900">
         🔥 ${i.count||0}
       </div>
 
@@ -333,7 +424,6 @@ function renderPopular(list){
   });
 }
 
-// СКРОЛЛ + ПОДСВЕТКА
 function scrollToItem(id){
 
   const el = document.getElementById(id);
@@ -349,10 +439,9 @@ function scrollToItem(id){
 
   setTimeout(()=>{
     el.classList.remove("highlight");
-  },1500);
+  },1800);
 }
 
-// раскрытие
 let openPopular=false;
 
 function togglePopular(){
@@ -361,7 +450,6 @@ function togglePopular(){
   openPopular ? "block" : "none";
 }
 
-// поиск
 document.getElementById("search").addEventListener("input",e=>{
   const q=e.target.value.toLowerCase();
 
@@ -370,7 +458,6 @@ document.getElementById("search").addEventListener("input",e=>{
   ));
 });
 
-// ===== ФУНКЦИЯ СТРЕЛКИ НАВЕРХ =====
 function scrollToTop(){
   window.scrollTo({top:0, behavior:"smooth"});
 }
