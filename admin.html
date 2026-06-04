@@ -2,8 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>YouTube Studio PRO Analytics</title>
-
+<title>Art_aTV Analytics PRO MAX</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -13,48 +12,112 @@
 <style>
 body{
   margin:0;
-  font-family:Arial;
   background:#0b0b0f;
   color:white;
+  font-family:Arial,sans-serif;
 }
 
 .header{
-  padding:16px;
-  font-size:20px;
-  font-weight:800;
-  background:#111;
   position:sticky;
   top:0;
-  z-index:10;
+  z-index:100;
+  background:#111;
+  padding:18px;
+  font-size:24px;
+  font-weight:900;
 }
 
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
   gap:10px;
   padding:10px;
 }
 
 .card{
   background:#15151c;
-  border-radius:12px;
-  padding:14px;
+  border-radius:14px;
+  padding:16px;
 }
 
 .big{
-  font-size:26px;
-  font-weight:800;
+  font-size:30px;
+  font-weight:900;
   color:#3aa0ff;
+}
+
+.label{
+  margin-top:6px;
+  color:#aaa;
+  font-size:13px;
 }
 
 .search{
   width:calc(100% - 20px);
   margin:10px;
-  padding:12px;
+  padding:14px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   background:#1a1a1a;
   color:white;
+  font-size:15px;
+}
+
+.section{
+  margin:10px;
+  background:#15151c;
+  border-radius:14px;
+  padding:16px;
+  overflow:auto;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid #222;
+}
+
+.rank{
+  width:45px;
+  color:#3aa0ff;
+  font-weight:700;
+}
+
+.title{
+  flex:1;
+  margin:0 10px;
+}
+
+.count{
+  font-weight:700;
+}
+
+.percent{
+  color:#aaa;
+  margin-left:8px;
+}
+
+.lasttime{
+  color:#888;
+  font-size:12px;
+  margin-top:3px;
+}
+
+button{
+  margin:8px 5px 8px 0;
+  padding:10px 12px;
+  border:none;
+  border-radius:10px;
+  background:#3aa0ff;
+  color:white;
+  font-weight:800;
+  cursor:pointer;
+}
+
+canvas{
+  max-height:460px;
 }
 
 table{
@@ -66,171 +129,338 @@ table{
 th,td{
   padding:10px;
   border-bottom:1px solid #222;
+  text-align:left;
 }
 
-.rank{
-  color:#3aa0ff;
-  font-weight:700;
-}
-
-.green{color:#4ade80;}
-.yellow{color:#facc15;}
-.red{color:#f87171;}
-
-canvas{
-  margin:10px;
-  max-height:420px;
-}
+.green{color:#4ade80}
+.yellow{color:#facc15}
+.red{color:#f87171}
 </style>
 </head>
 
 <body>
 
-<div class="header">
-📊 YouTube Studio Style Analytics (Art_aTV)
-</div>
+<div class="header">📊 Art_aTV Analytics PRO MAX</div>
 
 <div class="grid">
-  <div class="card">
-    <div class="big" id="total">0</div>
-    🔥 клики
-  </div>
+  <div class="card"><div class="big" id="totalClicks">0</div><div class="label">🔥 Всего кликов доступа</div></div>
+  <div class="card"><div class="big" id="totalShows">0</div><div class="label">🎬 Сериалов с кликами</div></div>
+  <div class="card"><div class="big" id="avgClicks">0</div><div class="label">📈 Среднее на сериал</div></div>
+  <div class="card"><div class="big" id="leader">—</div><div class="label">🏆 Лидер</div></div>
+  <div class="card"><div class="big" id="usersCount">0</div><div class="label">👥 Пользователей</div></div>
+  <div class="card"><div class="big" id="visitsCount">0</div><div class="label">👁 Открытий каталога</div></div>
+  <div class="card"><div class="big" id="todayUsers">0</div><div class="label">🆕 Активных за 24 часа</div></div>
+  <div class="card"><div class="big" id="onlineCount">0</div><div class="label">🟢 Онлайн сейчас</div></div>
+</div>
 
-  <div class="card">
-    <div class="big" id="series">0</div>
-    🎬 сериалов
-  </div>
+<div class="section">
+  <button onclick="exportClicks()">Экспорт кликов CSV</button>
+  <button onclick="exportUsers()">Экспорт пользователей CSV</button>
+</div>
 
-  <div class="card">
-    <div class="big" id="avg">0</div>
-    📈 среднее
-  </div>
+<div class="section">
+<h2>📊 ТОП-20 сериалов</h2>
+<canvas id="chartClicks"></canvas>
+</div>
 
-  <div class="card">
-    <div class="big" id="top">—</div>
-    🏆 лидер
-  </div>
+<div class="section">
+<h2>📈 Посещения за 7 дней</h2>
+<canvas id="chartVisits"></canvas>
+</div>
+
+<div class="section">
+<h2>🥧 Типы событий</h2>
+<canvas id="chartEvents"></canvas>
 </div>
 
 <input class="search" id="search" placeholder="Поиск сериала...">
 
-<canvas id="bar"></canvas>
-<canvas id="pie"></canvas>
+<div class="section">
+<h2>🔥 Полный рейтинг сериалов</h2>
+<div id="list"></div>
+</div>
 
+<div class="section">
+<h2>👥 Последние пользователи</h2>
 <table>
 <thead>
 <tr>
-<th>#</th>
-<th>Сериал</th>
-<th>Клики</th>
-<th>%</th>
-<th>Активность</th>
+<th>ID</th>
+<th>Username</th>
+<th>Источник</th>
+<th>Открытий</th>
+<th>Последний визит</th>
 </tr>
 </thead>
-<tbody id="table"></tbody>
+<tbody id="usersTable"></tbody>
 </table>
+</div>
+
+<div class="section">
+<h2>🧠 AI-инсайты</h2>
+<div id="ai"></div>
+</div>
 
 <script>
-
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
-  projectId: "art-atv"
+  projectId: "art-atv",
+  storageBucket: "art-atv.firebasestorage.app",
+  messagingSenderId: "549965698241",
+  appId: "1:549965698241:web:86cfa4dc6048d48d4ef040"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let data = [];
-let bar, pie;
+let chartClicks, chartVisits, chartEvents;
+let clicksData=[], usersData=[], visitsData=[], eventsData=[], onlineData=[];
 
-function status(t){
-  const d = Date.now() - (t||0);
-  if(d < 86400000) return "🟢";
-  if(d < 604800000) return "🟡";
-  return "🔴";
+function medal(index){
+  if(index===0) return "🥇";
+  if(index===1) return "🥈";
+  if(index===2) return "🥉";
+  return "#" + (index+1);
 }
 
-function render(){
-
-  let total = data.reduce((a,b)=>a+(b.count||0),0);
-
-  document.getElementById("total").innerText = total;
-  document.getElementById("series").innerText = data.length;
-  document.getElementById("avg").innerText = data.length ? (total/data.length).toFixed(1) : 0;
-  document.getElementById("top").innerText = data[0]?.title || "—";
-
-  let q = document.getElementById("search").value.toLowerCase();
-
-  let filtered = data.filter(i=>i.title.toLowerCase().includes(q));
-
-  let tbody = "";
-
-  filtered.forEach((i,idx)=>{
-
-    let percent = total ? ((i.count/total)*100).toFixed(1) : 0;
-
-    tbody += `
-      <tr>
-        <td class="rank">${idx+1}</td>
-        <td>${i.title}</td>
-        <td>${i.count}</td>
-        <td>${percent}%</td>
-        <td>${status(i.time)}</td>
-      </tr>
-    `;
-  });
-
-  document.getElementById("table").innerHTML = tbody;
-
-  draw(filtered.slice(0,20));
+function formatDate(t){
+  return t ? new Date(t).toLocaleString("ru-RU") : "нет данных";
 }
 
-function draw(v){
+function status(time){
+  const diff = Date.now() - (time || 0);
+  if(diff < 86400000) return "🟢 сегодня";
+  if(diff < 604800000) return "🟡 7 дней";
+  return "🔴 давно";
+}
 
-  if(bar) bar.destroy();
-  if(pie) pie.destroy();
+function renderAll(){
+  renderClicks(clicksData);
+  renderUsers();
+  renderVisitsChart();
+  renderEventsChart();
+  renderAI();
+}
 
-  bar = new Chart(document.getElementById("bar"),{
+function renderClicks(data){
+  let total=0;
+  data.forEach(i=>total += i.count || 0);
+
+  document.getElementById("totalClicks").innerText = total;
+  document.getElementById("totalShows").innerText = data.length;
+  document.getElementById("avgClicks").innerText = data.length ? (total/data.length).toFixed(1) : 0;
+  document.getElementById("leader").innerText = data.length ? data[0].title : "—";
+
+  const q=document.getElementById("search").value.toLowerCase();
+  const filtered=data.filter(item=>item.title.toLowerCase().includes(q));
+
+  document.getElementById("list").innerHTML=filtered.map((item,index)=>{
+    const percent = total ? ((item.count/total)*100).toFixed(1) : 0;
+
+    return `
+    <div class="row">
+      <div class="rank">${medal(index)}</div>
+      <div class="title">
+        ${item.title}
+        <div class="lasttime">Последний клик: ${formatDate(item.time)} · ${status(item.time)}</div>
+      </div>
+      <div class="count">${item.count}<span class="percent">${percent}%</span></div>
+    </div>`;
+  }).join("");
+
+  drawClicksChart(data);
+}
+
+function drawClicksChart(data){
+  const top=data.slice(0,20);
+
+  if(chartClicks) chartClicks.destroy();
+
+  chartClicks=new Chart(document.getElementById("chartClicks"),{
     type:"bar",
     data:{
-      labels:v.map(i=>i.title),
-      datasets:[{
-        label:"Клики",
-        data:v.map(i=>i.count)
-      }]
-    }
-  });
-
-  pie = new Chart(document.getElementById("pie"),{
-    type:"pie",
-    data:{
-      labels:v.slice(0,10).map(i=>i.title),
-      datasets:[{
-        data:v.slice(0,10).map(i=>i.count)
-      }]
+      labels:top.map(i=>i.title),
+      datasets:[{label:"Клики",data:top.map(i=>i.count)}]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:"white"}}},
+      scales:{x:{ticks:{color:"white"}},y:{ticks:{color:"white"}}}
     }
   });
 }
 
-db.collection("clicks").onSnapshot(snap=>{
+function renderUsers(){
+  document.getElementById("usersCount").innerText = usersData.length;
+  document.getElementById("visitsCount").innerText = visitsData.length;
 
-  let arr = [];
+  const dayAgo = Date.now() - 86400000;
+  document.getElementById("todayUsers").innerText =
+    usersData.filter(u=>(u.last_visit||0)>dayAgo).length;
 
-  snap.forEach(d=>{
-    arr.push(d.data());
+  const now = Date.now();
+  document.getElementById("onlineCount").innerText =
+    onlineData.filter(u=>now-(u.last_seen||0)<70000).length;
+
+  const sorted=[...usersData].sort((a,b)=>(b.last_visit||0)-(a.last_visit||0)).slice(0,30);
+
+  document.getElementById("usersTable").innerHTML = sorted.map(u=>`
+    <tr>
+      <td>${u.id || ""}</td>
+      <td>${u.username ? "@"+u.username : u.first_name || "—"}</td>
+      <td>${u.source || "—"}</td>
+      <td>${u.opens || 0}</td>
+      <td>${formatDate(u.last_visit)}</td>
+    </tr>
+  `).join("");
+}
+
+function renderVisitsChart(){
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date();
+    d.setDate(d.getDate()-i);
+    const key=d.toLocaleDateString("ru-RU");
+    days.push(key);
+  }
+
+  const counts={};
+  days.forEach(d=>counts[d]=0);
+
+  visitsData.forEach(v=>{
+    const key=new Date(v.time||0).toLocaleDateString("ru-RU");
+    if(counts[key]!==undefined) counts[key]++;
   });
 
+  if(chartVisits) chartVisits.destroy();
+
+  chartVisits=new Chart(document.getElementById("chartVisits"),{
+    type:"line",
+    data:{
+      labels:days,
+      datasets:[{label:"Открытия каталога",data:days.map(d=>counts[d]),tension:.35}]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:"white"}}},
+      scales:{x:{ticks:{color:"white"}},y:{ticks:{color:"white"}}}
+    }
+  });
+}
+
+function renderEventsChart(){
+  const map={};
+
+  eventsData.forEach(e=>{
+    map[e.type || "unknown"] = (map[e.type || "unknown"] || 0) + 1;
+  });
+
+  if(chartEvents) chartEvents.destroy();
+
+  chartEvents=new Chart(document.getElementById("chartEvents"),{
+    type:"pie",
+    data:{
+      labels:Object.keys(map),
+      datasets:[{data:Object.values(map)}]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:"white"}}}
+    }
+  });
+}
+
+function renderAI(){
+  const top=clicksData[0];
+  const weak=clicksData[clicksData.length-1];
+
+  const posterClicks=eventsData.filter(e=>e.type==="poster_open").length;
+  const kpClicks=eventsData.filter(e=>e.type==="kinopoisk_click").length;
+  const accessClicks=eventsData.filter(e=>e.type==="access_click").length;
+
+  const conversion = posterClicks ? ((kpClicks/posterClicks)*100).toFixed(1) : 0;
+
+  document.getElementById("ai").innerHTML = `
+    <p>🏆 Самый сильный сериал: <b>${top ? top.title : "—"}</b></p>
+    <p>📉 Самый слабый по кликам: <b>${weak ? weak.title : "—"}</b></p>
+    <p>🖼 Открытий постеров: <b>${posterClicks}</b></p>
+    <p>🎬 Переходов на Кинопоиск: <b>${kpClicks}</b></p>
+    <p>💳 Нажатий “Оформить доступ”: <b>${accessClicks}</b></p>
+    <p>📈 Конверсия постер → Кинопоиск: <b>${conversion}%</b></p>
+    <p>💡 Совет: продвигай первые 3 сериала из рейтинга и проверь постеры у слабых сериалов.</p>
+  `;
+}
+
+db.collection("clicks").onSnapshot(snapshot=>{
+  let arr=[];
+  snapshot.forEach(doc=>{
+    const d=doc.data();
+    arr.push({
+      title:d.title || "Без названия",
+      count:d.count || 0,
+      time:d.time || 0
+    });
+  });
   arr.sort((a,b)=>(b.count||0)-(a.count||0));
-
-  data = arr;
-
-  render();
-
+  clicksData=arr;
+  renderAll();
 });
 
-document.getElementById("search").addEventListener("input",render);
+db.collection("users").onSnapshot(snapshot=>{
+  let arr=[];
+  snapshot.forEach(doc=>arr.push(doc.data()));
+  usersData=arr;
+  renderAll();
+});
 
+db.collection("visits").onSnapshot(snapshot=>{
+  let arr=[];
+  snapshot.forEach(doc=>arr.push(doc.data()));
+  visitsData=arr;
+  renderAll();
+});
+
+db.collection("events").onSnapshot(snapshot=>{
+  let arr=[];
+  snapshot.forEach(doc=>arr.push(doc.data()));
+  eventsData=arr;
+  renderAll();
+});
+
+db.collection("online").onSnapshot(snapshot=>{
+  let arr=[];
+  snapshot.forEach(doc=>arr.push(doc.data()));
+  onlineData=arr;
+  renderAll();
+});
+
+document.getElementById("search").addEventListener("input",()=>renderClicks(clicksData));
+
+function exportClicks(){
+  let csv="title,count,time\n";
+  clicksData.forEach(i=>{
+    csv += `"${i.title}",${i.count},"${formatDate(i.time)}"\n`;
+  });
+  downloadCSV(csv,"clicks.csv");
+}
+
+function exportUsers(){
+  let csv="id,username,first_name,source,opens,last_visit\n";
+  usersData.forEach(u=>{
+    csv += `"${u.id}","${u.username||""}","${u.first_name||""}","${u.source||""}",${u.opens||0},"${formatDate(u.last_visit)}"\n`;
+  });
+  downloadCSV(csv,"users.csv");
+}
+
+function downloadCSV(csv,name){
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=name;
+  a.click();
+}
 </script>
 
 </body>
