@@ -10,271 +10,39 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
-:root{
-  --bg:#050505;
-  --card:#111114;
-  --muted:#9b9b9b;
-  --gold:#f6c453;
-  --white:#fff;
-}
-
+:root{--bg:#050505;--card:#111114;--muted:#9b9b9b;--gold:#f6c453;--white:#fff}
 *{box-sizing:border-box}
-
-body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:radial-gradient(circle at top,rgba(255,255,255,.07),transparent 28%),#050505;
-  color:white;
-}
-
-.header{
-  position:sticky;
-  top:0;
-  z-index:20;
-  padding:18px 16px 14px;
-  background:rgba(5,5,5,.9);
-  backdrop-filter:blur(16px);
-  border-bottom:1px solid rgba(255,255,255,.06);
-}
-
-.logo-row{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.logo-a{
-  font-size:38px;
-  font-weight:900;
-  letter-spacing:-2px;
-}
-
-.play{
-  width:0;
-  height:0;
-  border-top:9px solid transparent;
-  border-bottom:9px solid transparent;
-  border-left:15px solid var(--gold);
-}
-
-.brand a{
-  color:white;
-  text-decoration:none;
-  font-size:26px;
-  font-weight:900;
-}
-
-.subtitle{
-  margin-top:4px;
-  color:var(--muted);
-  font-size:12px;
-  letter-spacing:2px;
-  text-transform:uppercase;
-}
-
-.support{
-  position:fixed;
-  right:12px;
-  top:14px;
-  z-index:999;
-}
-
-.support a{
-  display:block;
-  background:rgba(255,255,255,.08);
-  color:#ddd;
-  padding:9px 12px;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:12px;
-  text-decoration:none;
-  font-size:12px;
-  font-weight:800;
-  backdrop-filter:blur(12px);
-}
-
-.counter{
-  padding:12px 16px 4px;
-  color:var(--muted);
-  font-size:13px;
-}
-
-input{
-  width:92%;
-  margin:10px 4%;
-  padding:15px 16px;
-  border-radius:16px;
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.06);
-  color:white;
-  font-size:16px;
-  outline:none;
-}
-
-.section{
-  padding:18px 16px 10px;
-  font-weight:900;
-  cursor:pointer;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.section span{
-  color:var(--gold);
-}
-
-.list{
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-  padding:10px 12px;
-}
-
-.item{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025));
-  border:1px solid rgba(255,255,255,.07);
-  padding:12px;
-  border-radius:18px;
-  scroll-margin-top:120px;
-  transition:.25s ease;
-  box-shadow:0 12px 30px rgba(0,0,0,.28);
-}
-
-.item.highlight{
-  outline:2px solid var(--gold);
-  box-shadow:0 0 28px rgba(246,196,83,.45);
-  transform:scale(1.02);
-}
-
-.poster{
-  width:86px;
-  height:128px;
-  object-fit:cover;
-  border-radius:12px;
-  cursor:pointer;
-  box-shadow:0 8px 20px rgba(0,0,0,.45);
-}
-
-.title{
-  flex:1;
-  font-size:18px;
-  line-height:1.2;
-  font-weight:900;
-}
-
-.btn{
-  background:white;
-  color:#050505;
-  padding:10px 13px;
-  border-radius:12px;
-  font-size:13px;
-  font-weight:900;
-  text-decoration:none;
-  white-space:nowrap;
-}
-
-#popular .item{
-  background:rgba(246,196,83,.08);
-  border:1px solid rgba(246,196,83,.18);
-}
-
-#newList .item{
-  background:rgba(255,255,255,.045);
-}
-
-#scrollTopBtn{
-  position:fixed;
-  right:18px;
-  bottom:18px;
-  width:54px;
-  height:54px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border:none;
-  border-radius:50%;
-  background:rgba(255,255,255,.08);
-  backdrop-filter:blur(14px);
-  color:white;
-  font-size:24px;
-  cursor:pointer;
-  z-index:9999;
-  box-shadow:0 4px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.15);
-}
-
-.modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:2000;
-  background:rgba(0,0,0,.86);
-  backdrop-filter:blur(10px);
-  align-items:center;
-  justify-content:center;
-  padding:18px;
-}
-
-.modal-box{
-  width:100%;
-  max-width:420px;
-  background:#111114;
-  border:1px solid rgba(255,255,255,.1);
-  border-radius:22px;
-  padding:16px;
-  text-align:center;
-  box-shadow:0 20px 60px rgba(0,0,0,.6);
-}
-
-.modal-box img{
-  width:100%;
-  max-height:540px;
-  object-fit:cover;
-  border-radius:16px;
-}
-
-.modal-title{
-  margin:14px 0 12px;
-  font-size:22px;
-  font-weight:900;
-}
-
-.modal-actions{
-  display:flex;
-  gap:10px;
-  margin-top:10px;
-}
-
-.modal-actions a,
-.modal-actions button{
-  flex:1;
-  padding:12px;
-  border-radius:14px;
-  border:none;
-  font-weight:900;
-  text-decoration:none;
-  cursor:pointer;
-}
-
-.kp-btn{
-  background:var(--gold);
-  color:#111;
-}
-
-.close-btn{
-  background:rgba(255,255,255,.1);
-  color:white;
-}
-
-@media(max-width:480px){
-  .brand a{font-size:23px}
-  .logo-a{font-size:34px}
-  .title{font-size:17px}
-  .btn{font-size:12px;padding:9px 10px}
-  .poster{width:82px;height:122px}
-}
+body{margin:0;font-family:Arial,sans-serif;background:radial-gradient(circle at top,rgba(255,255,255,.07),transparent 28%),#050505;color:white}
+.header{position:sticky;top:0;z-index:20;padding:18px 16px 14px;background:rgba(5,5,5,.9);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.06)}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-a{font-size:38px;font-weight:900;letter-spacing:-2px}
+.play{width:0;height:0;border-top:9px solid transparent;border-bottom:9px solid transparent;border-left:15px solid var(--gold)}
+.brand a{color:white;text-decoration:none;font-size:26px;font-weight:900}
+.subtitle{margin-top:4px;color:var(--muted);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.support{position:fixed;right:12px;top:14px;z-index:999}
+.support a{display:block;background:rgba(255,255,255,.08);color:#ddd;padding:9px 12px;border:1px solid rgba(255,255,255,.12);border-radius:12px;text-decoration:none;font-size:12px;font-weight:800;backdrop-filter:blur(12px)}
+.counter{padding:12px 16px 4px;color:var(--muted);font-size:13px}
+input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.06);color:white;font-size:16px;outline:none}
+.section{padding:18px 16px 10px;font-weight:900;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.section span{color:var(--gold)}
+.list{display:flex;flex-direction:column;gap:14px;padding:10px 12px}
+.item{display:flex;align-items:center;gap:14px;background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.07);padding:12px;border-radius:18px;scroll-margin-top:120px;transition:.25s ease;box-shadow:0 12px 30px rgba(0,0,0,.28)}
+.item.highlight{outline:2px solid var(--gold);box-shadow:0 0 28px rgba(246,196,83,.45);transform:scale(1.02)}
+.poster{width:86px;height:128px;object-fit:cover;border-radius:12px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.45)}
+.title{flex:1;font-size:18px;line-height:1.2;font-weight:900}
+.btn{background:white;color:#050505;padding:10px 13px;border-radius:12px;font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap}
+#popular .item{background:rgba(246,196,83,.08);border:1px solid rgba(246,196,83,.18)}
+#newList .item{background:rgba(255,255,255,.045)}
+#scrollTopBtn{position:fixed;right:18px;bottom:18px;width:54px;height:54px;display:flex;align-items:center;justify-content:center;border:none;border-radius:50%;background:rgba(255,255,255,.08);backdrop-filter:blur(14px);color:white;font-size:24px;cursor:pointer;z-index:9999;box-shadow:0 4px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.15)}
+.modal{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.86);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:18px}
+.modal-box{width:100%;max-width:420px;background:#111114;border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:16px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.modal-box img{width:100%;max-height:540px;object-fit:cover;border-radius:16px}
+.modal-title{margin:14px 0 12px;font-size:22px;font-weight:900}
+.modal-actions{display:flex;gap:10px;margin-top:10px}
+.modal-actions a,.modal-actions button{flex:1;padding:12px;border-radius:14px;border:none;font-weight:900;text-decoration:none;cursor:pointer}
+.kp-btn{background:var(--gold);color:#111}
+.close-btn{background:rgba(255,255,255,.1);color:white}
+@media(max-width:480px){.brand a{font-size:23px}.logo-a{font-size:34px}.title{font-size:17px}.btn{font-size:12px;padding:9px 10px}.poster{width:82px;height:122px}}
 </style>
 </head>
 
@@ -350,12 +118,7 @@ let tg = window.Telegram?.WebApp;
 if(tg){ tg.expand(); }
 
 function normalizeTitle(title){
-  return String(title || "")
-    .toLowerCase()
-    .replace(/ё/g,"е")
-    .replace(/[^a-zа-я0-9]+/gi," ")
-    .replace(/\s+/g," ")
-    .trim();
+  return String(title || "").toLowerCase().replace(/ё/g,"е").replace(/[^a-zа-я0-9]+/gi," ").replace(/\s+/g," ").trim();
 }
 
 function makeId(title){
@@ -381,13 +144,7 @@ function getUser(){
     localStorage.setItem("art_atv_guest_id", guest);
   }
 
-  return {
-    id:guest,
-    username:"",
-    first_name:"Guest",
-    last_name:"",
-    source:"browser"
-  };
+  return {id:guest,username:"",first_name:"Guest",last_name:"",source:"browser"};
 }
 
 const currentUser = getUser();
@@ -459,61 +216,64 @@ function trackClick(title){
   saveEvent("access_click",title);
 }
 
-function trackPoster(title){
-  saveEvent("poster_open",title);
-}
-
-function trackKP(title){
-  saveEvent("kinopoisk_click",title);
-}
+function trackPoster(title){ saveEvent("poster_open",title); }
+function trackKP(title){ saveEvent("kinopoisk_click",title); }
 
 const SHEET =
 "https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
 let allData=[];
+let lastSheetText="";
 
-fetch(SHEET)
-.then(r=>r.text())
-.then(t=>{
-  const rows=t.trim().split("\n").slice(1);
+function loadSheet(){
+  fetch(SHEET + "&cacheBust=" + Date.now())
+  .then(r=>r.text())
+  .then(t=>{
+    if(t === lastSheetText && allData.length){
+      return;
+    }
 
-  allData=rows.map(r=>{
-    const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
-    return{
-      title:(c[0]||"").trim(),
-      link:(c[1]||"").trim(),
-      poster:(c[2]||"").trim(),
-      kp:(c[3]||"").trim()
-    };
+    lastSheetText = t;
+
+    const rows=t.trim().split("\n").slice(1);
+
+    allData=rows.map(r=>{
+      const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+      return{
+        title:(c[0]||"").trim(),
+        link:(c[1]||"").trim(),
+        poster:(c[2]||"").trim(),
+        kp:(c[3]||"").trim()
+      };
+    });
+
+    document.getElementById("counter").innerText =
+    "🎬 Всего сериалов: " + allData.length + " · автообновление 60 сек";
+
+    const q=normalizeTitle(document.getElementById("search").value);
+    render(allData.filter(i=>normalizeTitle(i.title).includes(q)));
+    renderNew(allData);
+    loadPopular();
+  })
+  .catch(()=>{
+    document.getElementById("counter").innerText =
+    "⚠️ Не удалось обновить Google Sheets";
   });
+}
 
-  document.getElementById("counter").innerText =
-  "🎬 Всего сериалов: " + allData.length;
-
-  render(allData);
-  renderNew(allData);
-  loadPopular();
-});
+loadSheet();
+setInterval(loadSheet,60000);
 
 function render(list){
   const box=document.getElementById("list");
   box.innerHTML="";
 
   list.forEach((i)=>{
-    const id = makeId(i.title);
-
     box.innerHTML+=`
-    <div class="item" id="${id}" data-title="${normalizeTitle(i.title)}">
-      <img class="poster"
-        src="${i.poster}"
-        onclick="openPosterByTitle(${JSON.stringify(i.title)})">
-
+    <div class="item" id="${makeId(i.title)}" data-title="${normalizeTitle(i.title)}">
+      <img class="poster" src="${i.poster}" onclick="openPosterByTitle(${JSON.stringify(i.title)})">
       <div class="title">${i.title}</div>
-
-      <a class="btn"
-        href="${i.link}"
-        target="_blank"
-        onclick="trackClick(${JSON.stringify(i.title)})">
+      <a class="btn" href="${i.link}" target="_blank" onclick="trackClick(${JSON.stringify(i.title)})">
         Оформить доступ
       </a>
     </div>`;
@@ -529,10 +289,7 @@ function renderNew(list){
     <div class="item" data-title="${normalizeTitle(i.title)}">
       <img class="poster" src="${i.poster}" onclick="openPosterByTitle(${JSON.stringify(i.title)})">
       <div class="title">${i.title}</div>
-      <a class="btn"
-        href="${i.link}"
-        target="_blank"
-        onclick="trackClick(${JSON.stringify(i.title)})">
+      <a class="btn" href="${i.link}" target="_blank" onclick="trackClick(${JSON.stringify(i.title)})">
         Оформить доступ
       </a>
     </div>`;
@@ -565,18 +322,19 @@ function closePoster(){
 }
 
 function modalBgClose(e){
-  if(e.target.id === "posterModal"){
-    closePoster();
-  }
+  if(e.target.id === "posterModal"){ closePoster(); }
 }
 
+let popularSubscribed=false;
+
 function loadPopular(){
+  if(popularSubscribed) return;
+  popularSubscribed=true;
+
   db.collection("clicks").onSnapshot(snap=>{
     let arr=[];
 
-    snap.forEach(doc=>{
-      arr.push(doc.data());
-    });
+    snap.forEach(doc=>arr.push(doc.data()));
 
     arr.sort((a,b)=>(b.count||0)-(a.count||0));
     arr = arr.slice(0,5);
@@ -621,17 +379,13 @@ function scrollToTitle(title){
 
     items.forEach(el=>{
       const itemTitle = el.getAttribute("data-title") || "";
-      if(itemTitle === target){
-        found = el;
-      }
+      if(itemTitle === target){ found = el; }
     });
 
     if(!found){
       items.forEach(el=>{
         const itemTitle = el.getAttribute("data-title") || "";
-        if(itemTitle.includes(target) || target.includes(itemTitle)){
-          found = el;
-        }
+        if(itemTitle.includes(target) || target.includes(itemTitle)){ found = el; }
       });
     }
 
@@ -640,17 +394,10 @@ function scrollToTitle(title){
       return;
     }
 
-    found.scrollIntoView({
-      behavior:"smooth",
-      block:"center"
-    });
-
+    found.scrollIntoView({behavior:"smooth",block:"center"});
     found.classList.add("highlight");
 
-    setTimeout(()=>{
-      found.classList.remove("highlight");
-    },1800);
-
+    setTimeout(()=>found.classList.remove("highlight"),1800);
   },120);
 }
 
@@ -659,26 +406,19 @@ let openNew=false;
 
 function togglePopular(){
   openPopular=!openPopular;
-  document.getElementById("popularWrap").style.display =
-  openPopular ? "block" : "none";
-  document.getElementById("popularArrow").innerText =
-  openPopular ? "▴" : "▾";
+  document.getElementById("popularWrap").style.display = openPopular ? "block" : "none";
+  document.getElementById("popularArrow").innerText = openPopular ? "▴" : "▾";
 }
 
 function toggleNew(){
   openNew=!openNew;
-  document.getElementById("newWrap").style.display =
-  openNew ? "block" : "none";
-  document.getElementById("newArrow").innerText =
-  openNew ? "▴" : "▾";
+  document.getElementById("newWrap").style.display = openNew ? "block" : "none";
+  document.getElementById("newArrow").innerText = openNew ? "▴" : "▾";
 }
 
 document.getElementById("search").addEventListener("input",e=>{
   const q=normalizeTitle(e.target.value);
-
-  render(allData.filter(i=>
-    normalizeTitle(i.title).includes(q)
-  ));
+  render(allData.filter(i=>normalizeTitle(i.title).includes(q)));
 });
 
 function scrollToTop(){
