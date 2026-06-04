@@ -592,11 +592,20 @@ function renderPopular(list){
   list.forEach((i,index)=>{
     const num = String(index + 1).padStart(2,"0");
 
-    box.innerHTML+=`
-    <div class="item" style="cursor:pointer" onclick="scrollToTitle(${JSON.stringify(i.title)})">
+    const div = document.createElement("div");
+    div.className = "item";
+    div.style.cursor = "pointer";
+
+    div.innerHTML = `
       <div class="title">${num}. ${i.title}</div>
       <div style="color:var(--gold);font-weight:900">🔥 ${i.count||0}</div>
-    </div>`;
+    `;
+
+    div.addEventListener("click", function(){
+      scrollToTitle(i.title);
+    });
+
+    box.appendChild(div);
   });
 }
 
@@ -626,7 +635,10 @@ function scrollToTitle(title){
       });
     }
 
-    if(!found) return;
+    if(!found){
+      alert("Сериал не найден в основном списке: " + title);
+      return;
+    }
 
     found.scrollIntoView({
       behavior:"smooth",
@@ -638,7 +650,8 @@ function scrollToTitle(title){
     setTimeout(()=>{
       found.classList.remove("highlight");
     },1800);
-  },80);
+
+  },120);
 }
 
 let openPopular=false;
