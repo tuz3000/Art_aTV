@@ -3,31 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <title>Art_aTV</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 :root{
   --bg:#050505;
   --card:#111114;
-  --white:#ffffff;
   --muted:#9b9b9b;
   --gold:#f6c453;
+  --white:#fff;
 }
 
-*{
-  box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
   margin:0;
-  font-family:Arial, sans-serif;
-  background:
-    radial-gradient(circle at top, rgba(255,255,255,0.06), transparent 28%),
-    #050505;
+  font-family:Arial,sans-serif;
+  background:radial-gradient(circle at top,rgba(255,255,255,.07),transparent 28%),#050505;
   color:white;
 }
 
@@ -36,15 +32,9 @@ body{
   top:0;
   z-index:20;
   padding:18px 16px 14px;
-  background:rgba(5,5,5,0.9);
+  background:rgba(5,5,5,.9);
   backdrop-filter:blur(16px);
-  border-bottom:1px solid rgba(255,255,255,0.06);
-}
-
-.brand{
-  display:flex;
-  flex-direction:column;
-  line-height:1.1;
+  border-bottom:1px solid rgba(255,255,255,.06);
 }
 
 .logo-row{
@@ -54,7 +44,7 @@ body{
 }
 
 .logo-a{
-  font-size:34px;
+  font-size:38px;
   font-weight:900;
   letter-spacing:-2px;
 }
@@ -62,15 +52,15 @@ body{
 .play{
   width:0;
   height:0;
-  border-top:8px solid transparent;
-  border-bottom:8px solid transparent;
-  border-left:13px solid var(--gold);
+  border-top:9px solid transparent;
+  border-bottom:9px solid transparent;
+  border-left:15px solid var(--gold);
 }
 
 .brand a{
   color:white;
   text-decoration:none;
-  font-size:24px;
+  font-size:26px;
   font-weight:900;
 }
 
@@ -91,10 +81,10 @@ body{
 
 .support a{
   display:block;
-  background:rgba(255,255,255,0.08);
+  background:rgba(255,255,255,.08);
   color:#ddd;
   padding:9px 12px;
-  border:1px solid rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,.12);
   border-radius:12px;
   text-decoration:none;
   font-size:12px;
@@ -113,23 +103,16 @@ input{
   margin:10px 4%;
   padding:15px 16px;
   border-radius:16px;
-  border:1px solid rgba(255,255,255,0.08);
-  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.06);
   color:white;
   font-size:16px;
   outline:none;
-  backdrop-filter:blur(12px);
-}
-
-input::placeholder{
-  color:#777;
 }
 
 .section{
   padding:18px 16px 10px;
-  color:white;
   font-weight:900;
-  letter-spacing:.4px;
   cursor:pointer;
 }
 
@@ -148,18 +131,18 @@ input::placeholder{
   display:flex;
   align-items:center;
   gap:14px;
-  background:linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025));
-  border:1px solid rgba(255,255,255,0.07);
+  background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025));
+  border:1px solid rgba(255,255,255,.07);
   padding:12px;
   border-radius:18px;
   scroll-margin-top:120px;
   transition:.25s ease;
-  box-shadow:0 12px 30px rgba(0,0,0,0.28);
+  box-shadow:0 12px 30px rgba(0,0,0,.28);
 }
 
 .item.highlight{
   outline:2px solid var(--gold);
-  box-shadow:0 0 28px rgba(246,196,83,0.45);
+  box-shadow:0 0 28px rgba(246,196,83,.45);
   transform:scale(1.02);
 }
 
@@ -169,7 +152,7 @@ input::placeholder{
   object-fit:cover;
   border-radius:12px;
   cursor:pointer;
-  box-shadow:0 8px 20px rgba(0,0,0,0.45);
+  box-shadow:0 8px 20px rgba(0,0,0,.45);
 }
 
 .title{
@@ -177,7 +160,6 @@ input::placeholder{
   font-size:18px;
   line-height:1.2;
   font-weight:900;
-  color:white;
 }
 
 .btn{
@@ -192,8 +174,12 @@ input::placeholder{
 }
 
 #popular .item{
-  background:rgba(246,196,83,0.08);
-  border:1px solid rgba(246,196,83,0.18);
+  background:rgba(246,196,83,.08);
+  border:1px solid rgba(246,196,83,.18);
+}
+
+#newList .item{
+  background:rgba(255,255,255,.045);
 }
 
 #scrollTopBtn{
@@ -207,42 +193,84 @@ input::placeholder{
   justify-content:center;
   border:none;
   border-radius:50%;
-  background:rgba(255,255,255,0.08);
+  background:rgba(255,255,255,.08);
   backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-  box-shadow:
-    0 4px 18px rgba(0,0,0,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.15);
   color:white;
   font-size:24px;
   cursor:pointer;
   z-index:9999;
-  transition:.2s ease;
+  box-shadow:0 4px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.15);
 }
 
-#scrollTopBtn:hover{
-  transform:translateY(-3px);
-  background:rgba(255,255,255,0.15);
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:2000;
+  background:rgba(0,0,0,.86);
+  backdrop-filter:blur(10px);
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
+
+.modal-box{
+  width:100%;
+  max-width:420px;
+  background:#111114;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:22px;
+  padding:16px;
+  text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+
+.modal-box img{
+  width:100%;
+  max-height:540px;
+  object-fit:cover;
+  border-radius:16px;
+}
+
+.modal-title{
+  margin:14px 0 12px;
+  font-size:22px;
+  font-weight:900;
+}
+
+.modal-actions{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+.modal-actions a,
+.modal-actions button{
+  flex:1;
+  padding:12px;
+  border-radius:14px;
+  border:none;
+  font-weight:900;
+  text-decoration:none;
+  cursor:pointer;
+}
+
+.kp-btn{
+  background:var(--gold);
+  color:#111;
+}
+
+.close-btn{
+  background:rgba(255,255,255,.1);
+  color:white;
 }
 
 @media(max-width:480px){
-  .brand a{
-    font-size:22px;
-  }
-
-  .title{
-    font-size:17px;
-  }
-
-  .btn{
-    font-size:12px;
-    padding:9px 10px;
-  }
-
-  .poster{
-    width:82px;
-    height:122px;
-  }
+  .brand a{font-size:23px}
+  .logo-a{font-size:34px}
+  .title{font-size:17px}
+  .btn{font-size:12px;padding:9px 10px}
+  .poster{width:82px;height:122px}
 }
 </style>
 </head>
@@ -276,13 +304,28 @@ input::placeholder{
   <div class="list" id="popular"></div>
 </div>
 
+<div class="section">
+<span>NEW</span> Новинки
+</div>
+<div class="list" id="newList"></div>
+
 <div class="section">🎬 Все сериалы</div>
 <div class="list" id="list"></div>
 
 <button id="scrollTopBtn" onclick="scrollToTop()">↑</button>
 
-<script>
+<div class="modal" id="posterModal" onclick="modalBgClose(event)">
+  <div class="modal-box">
+    <img id="modalPoster" src="">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-actions">
+      <a class="kp-btn" id="modalKp" target="_blank">Кинопоиск</a>
+      <button class="close-btn" onclick="closePoster()">Закрыть</button>
+    </div>
+  </div>
+</div>
 
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
   authDomain: "art-atv.firebaseapp.com",
@@ -295,18 +338,116 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+let tg = window.Telegram?.WebApp;
+if(tg){ tg.expand(); }
+
+function getUser(){
+  const u = tg?.initDataUnsafe?.user;
+
+  if(u){
+    return {
+      id:String(u.id),
+      username:u.username || "",
+      first_name:u.first_name || "",
+      last_name:u.last_name || "",
+      source:"telegram"
+    };
+  }
+
+  let guest = localStorage.getItem("art_atv_guest_id");
+  if(!guest){
+    guest = "guest_" + Math.random().toString(36).slice(2) + Date.now();
+    localStorage.setItem("art_atv_guest_id", guest);
+  }
+
+  return {
+    id:guest,
+    username:"",
+    first_name:"Guest",
+    last_name:"",
+    source:"browser"
+  };
+}
+
+const currentUser = getUser();
+
+function saveUserVisit(){
+  const now = Date.now();
+  const ref = db.collection("users").doc(currentUser.id);
+
+  ref.set({
+    id:currentUser.id,
+    username:currentUser.username,
+    first_name:currentUser.first_name,
+    last_name:currentUser.last_name,
+    source:currentUser.source,
+    first_visit:firebase.firestore.FieldValue.serverTimestamp(),
+    last_visit:now,
+    opens:firebase.firestore.FieldValue.increment(1),
+    user_agent:navigator.userAgent,
+    language:navigator.language || "",
+    platform:navigator.platform || ""
+  },{merge:true});
+
+  db.collection("visits").add({
+    user_id:currentUser.id,
+    username:currentUser.username,
+    source:currentUser.source,
+    time:now,
+    page:"catalog"
+  });
+
+  db.collection("online").doc(currentUser.id).set({
+    user_id:currentUser.id,
+    username:currentUser.username,
+    source:currentUser.source,
+    last_seen:now
+  },{merge:true});
+}
+
+saveUserVisit();
+setInterval(()=>{
+  db.collection("online").doc(currentUser.id).set({
+    user_id:currentUser.id,
+    username:currentUser.username,
+    source:currentUser.source,
+    last_seen:Date.now()
+  },{merge:true});
+},30000);
+
 function makeId(title){
   return "item-" + title.trim().toLowerCase().replace(/\s+/g,"-");
+}
+
+function saveEvent(type,title=""){
+  db.collection("events").add({
+    type,
+    title,
+    user_id:currentUser.id,
+    username:currentUser.username,
+    source:currentUser.source,
+    time:Date.now()
+  });
 }
 
 function trackClick(title){
   const key = title.trim().toLowerCase();
 
   db.collection("clicks").doc(key).set({
-    title: title,
-    count: firebase.firestore.FieldValue.increment(1),
-    time: Date.now()
-  }, { merge:true });
+    title:title,
+    count:firebase.firestore.FieldValue.increment(1),
+    time:Date.now()
+  },{merge:true});
+
+  saveEvent("access_click",title);
+}
+
+function trackPoster(title){
+  saveEvent("poster_open",title);
+}
+
+function trackKP(title){
+  saveEvent("kinopoisk_click",title);
 }
 
 const SHEET =
@@ -317,12 +458,10 @@ let allData=[];
 fetch(SHEET)
 .then(r=>r.text())
 .then(t=>{
-
   const rows=t.trim().split("\n").slice(1);
 
   allData=rows.map(r=>{
     const c=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
-
     return{
       title:(c[0]||"").trim(),
       link:(c[1]||"").trim(),
@@ -335,6 +474,7 @@ fetch(SHEET)
   "🎬 Всего сериалов: " + allData.length;
 
   render(allData);
+  renderNew(allData);
   loadPopular();
 });
 
@@ -342,34 +482,78 @@ function render(list){
   const box=document.getElementById("list");
   box.innerHTML="";
 
-  list.forEach(i=>{
-
+  list.forEach((i,index)=>{
     const id = makeId(i.title);
 
     box.innerHTML+=`
     <div class="item" id="${id}">
-
       <img class="poster"
         src="${i.poster}"
-        onclick="window.open('${i.kp}','_blank')">
+        onclick="openPoster(${index})">
 
       <div class="title">${i.title}</div>
 
       <a class="btn"
         href="${i.link}"
         target="_blank"
-        onclick="trackClick('${i.title}')">
+        onclick="trackClick(${JSON.stringify(i.title)})">
         Оформить доступ
       </a>
-
     </div>`;
   });
 }
 
-function loadPopular(){
+function renderNew(list){
+  const box=document.getElementById("newList");
+  box.innerHTML="";
 
-  db.collection("clicks")
-  .onSnapshot(snap=>{
+  list.slice(-5).reverse().forEach((i)=>{
+    const index = allData.findIndex(x=>x.title===i.title);
+
+    box.innerHTML+=`
+    <div class="item">
+      <img class="poster" src="${i.poster}" onclick="openPoster(${index})">
+      <div class="title">${i.title}</div>
+      <a class="btn"
+        href="${i.link}"
+        target="_blank"
+        onclick="trackClick(${JSON.stringify(i.title)})">
+        Оформить доступ
+      </a>
+    </div>`;
+  });
+}
+
+function openPoster(index){
+  const i = allData[index];
+  if(!i) return;
+
+  trackPoster(i.title);
+
+  document.getElementById("modalPoster").src = i.poster;
+  document.getElementById("modalTitle").innerText = i.title;
+
+  const kp = i.kp || "https://www.kinopoisk.ru/";
+  const kpBtn = document.getElementById("modalKp");
+
+  kpBtn.href = kp;
+  kpBtn.onclick = ()=>trackKP(i.title);
+
+  document.getElementById("posterModal").style.display="flex";
+}
+
+function closePoster(){
+  document.getElementById("posterModal").style.display="none";
+}
+
+function modalBgClose(e){
+  if(e.target.id === "posterModal"){
+    closePoster();
+  }
+}
+
+function loadPopular(){
+  db.collection("clicks").onSnapshot(snap=>{
     let arr=[];
 
     snap.forEach(doc=>{
@@ -388,36 +572,22 @@ function renderPopular(list){
   box.innerHTML="";
 
   list.forEach((i,index)=>{
-
     const id = makeId(i.title);
     const num = String(index + 1).padStart(2,"0");
 
     box.innerHTML+=`
-    <div class="item"
-      style="cursor:pointer"
-      onclick="scrollToItem('${id}')">
-
+    <div class="item" style="cursor:pointer" onclick="scrollToItem('${id}')">
       <div class="title">${num}. ${i.title}</div>
-
-      <div style="color:var(--gold);font-weight:900">
-        🔥 ${i.count||0}
-      </div>
-
+      <div style="color:var(--gold);font-weight:900">🔥 ${i.count||0}</div>
     </div>`;
   });
 }
 
 function scrollToItem(id){
-
   const el = document.getElementById(id);
-
   if(!el) return;
 
-  el.scrollIntoView({
-    behavior:"smooth",
-    block:"center"
-  });
-
+  el.scrollIntoView({behavior:"smooth",block:"center"});
   el.classList.add("highlight");
 
   setTimeout(()=>{
@@ -435,16 +605,12 @@ function togglePopular(){
 
 document.getElementById("search").addEventListener("input",e=>{
   const q=e.target.value.toLowerCase();
-
-  render(allData.filter(i=>
-    i.title.toLowerCase().includes(q)
-  ));
+  render(allData.filter(i=>i.title.toLowerCase().includes(q)));
 });
 
 function scrollToTop(){
   window.scrollTo({top:0, behavior:"smooth"});
 }
-
 </script>
 
 </body>
