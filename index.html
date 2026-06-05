@@ -264,7 +264,7 @@ function startOnlineHeartbeat(){
 }
 
 function saveEvent(type,title=""){
-  db.collection("events").add({
+  return db.collection("events").add({
     type,
     title,
     user_id:currentUser.id,
@@ -274,14 +274,31 @@ function saveEvent(type,title=""){
   });
 }
 
-function trackClick(title){
+async function trackClick(title){
   const key=normalizeTitle(title);
-  db.collection("clicks").doc(key).set({
-    title:title,
-    count:firebase.firestore.FieldValue.increment(1),
-    time:Date.now()
-  },{merge:true});
-  saveEvent("access_click",title);
+  try{
+    await db.collection("clicks").doc(key).set({
+      title:title,
+      count:firebase.firestore.FieldValue.increment(1),
+      time:Date.now()
+    },{merge:true});
+    await saveEvent("access_click",title);
+  }catch(err){
+    console.error("Не удалось записать клик",err);
+  }
+}
+
+function openAccessLink(url){
+  url=safeUrl(url);
+  if(tg?.openTelegramLink && url.includes("t.me/")){
+    tg.openTelegramLink(url);
+    return;
+  }
+  if(tg?.openLink){
+    tg.openLink(url);
+    return;
+  }
+  window.location.href=url;
 }
 
 function trackPoster(title){saveEvent("poster_open",title);}
@@ -353,8 +370,10 @@ function createItem(i){
   btn.href=i.link;
   btn.target="_blank";
   btn.textContent="Оформить доступ";
-  btn.addEventListener("click",()=>{
-    trackClick(i.title);
+  btn.addEventListener("click",async (e)=>{
+    e.preventDefault();
+    await trackClick(i.title);
+    openAccessLink(i.link);
   });
 
   item.appendChild(img);
