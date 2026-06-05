@@ -51,6 +51,7 @@ input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px s
 .lock-title{font-size:24px;font-weight:900;margin:8px 0 10px}
 .lock-text{color:#cfcfcf;font-size:15px;line-height:1.55;margin:0 auto 18px;max-width:340px}
 .lock-btn{display:inline-block;background:var(--gold);color:#050505;padding:15px 22px;border-radius:16px;text-decoration:none;font-weight:900;box-shadow:0 10px 28px rgba(246,196,83,.22)}
+.secondary-lock-btn{background:rgba(255,255,255,.1)!important;color:white!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:none!important}
 .lock-note{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.4}
 #appContent{display:none}
 
@@ -67,8 +68,9 @@ input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px s
     </div>
     <div class="lock-title">🔒 Запустите бота</div>
     <p class="lock-text">Чтобы открыть каталог сериалов, сначала запустите Art_aTV Bot.</p>
-    <a class="lock-btn" href="https://t.me/Art_aTV_bot?start=from_miniapp">Запустить бота</a>
-    <div class="lock-note">После запуска вернитесь в каталог и обновите Mini App.</div>
+    <a class="lock-btn" href="https://t.me/Art_aTV_bot?start=from_miniapp" onclick="markBotOpenClicked()">Запустить бота</a>
+    <button id="openCatalogBtn" class="lock-btn secondary-lock-btn" style="display:none;margin-top:12px;border:none;cursor:pointer;" onclick="confirmBotStarted()">Я запустил бота — открыть каталог</button>
+    <div class="lock-note">После запуска бота вернитесь сюда и нажмите «Открыть каталог».</div>
   </div>
 </div>
 
@@ -161,22 +163,18 @@ let appStarted=false;
 let onlineInterval=null;
 let sheetInterval=null;
 
-async function checkBotStarted(){
-  if(currentUser.source!=="telegram"){
-    showStartBotScreen();
-    return;
-  }
+function getBotStartedKey(){
+  return "art_atv_bot_started_" + currentUser.id;
+}
 
-  try{
-    const doc=await db.collection("bot_users").doc(currentUser.id).get();
-
-    if(doc.exists){
-      startApp();
-    }else{
-      showStartBotScreen();
-    }
-  }catch(e){
-    console.error("Bot check error",e);
+function checkBotStarted(){
+  // Важно: без серверной связки с ботом Mini App не может на 100% проверить,
+  // нажал ли пользователь Start в Telegram. Поэтому делаем мягкую проверку:
+  // сначала просим открыть бота, а после возврата разрешаем открыть каталог,
+  // чтобы приложение не блокировалось навсегда.
+  if(localStorage.getItem(getBotStartedKey())==="yes"){
+    startApp();
+  }else{
     showStartBotScreen();
   }
 }
@@ -184,6 +182,26 @@ async function checkBotStarted(){
 function showStartBotScreen(){
   document.getElementById("appContent").style.display="none";
   document.getElementById("startBotScreen").style.display="flex";
+
+  const clicked=localStorage.getItem(getBotStartedKey()+"_clicked")==="yes";
+  const btn=document.getElementById("openCatalogBtn");
+  if(btn)btn.style.display=clicked?"inline-block":"none";
+}
+
+function markBotOpenClicked(){
+  localStorage.setItem(getBotStartedKey()+"_clicked","yes");
+  saveEvent("bot_start_click","from_miniapp");
+
+  setTimeout(()=>{
+    const btn=document.getElementById("openCatalogBtn");
+    if(btn)btn.style.display="inline-block";
+  },800);
+}
+
+function confirmBotStarted(){
+  localStorage.setItem(getBotStartedKey(),"yes");
+  saveEvent("bot_start_confirm","from_miniapp");
+  startApp();
 }
 
 function startApp(){
@@ -474,6 +492,12 @@ document.getElementById("search").addEventListener("input",e=>{
 function scrollToTop(){
   window.scrollTo({top:0,behavior:"smooth"});
 }
+
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden && !appStarted){
+    showStartBotScreen();
+  }
+});
 
 checkBotStarted();
 </script>
