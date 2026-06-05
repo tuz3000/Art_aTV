@@ -42,10 +42,37 @@ input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px s
 .modal-actions a,.modal-actions button{flex:1;padding:12px;border-radius:14px;border:none;font-weight:900;text-decoration:none;cursor:pointer}
 .kp-btn{background:var(--gold);color:#111}
 .close-btn{background:rgba(255,255,255,.1);color:white}
+
+.lock-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at top,rgba(246,196,83,.16),transparent 32%),#050505;color:white;text-align:center}
+.lock-card{width:100%;max-width:430px;background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.025));border:1px solid rgba(246,196,83,.18);border-radius:26px;padding:28px 20px;box-shadow:0 24px 70px rgba(0,0,0,.55)}
+.lock-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}
+.lock-logo-a{font-size:58px;font-weight:900;letter-spacing:-3px;line-height:1}
+.lock-play{width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:20px solid var(--gold)}
+.lock-title{font-size:24px;font-weight:900;margin:8px 0 10px}
+.lock-text{color:#cfcfcf;font-size:15px;line-height:1.55;margin:0 auto 18px;max-width:340px}
+.lock-btn{display:inline-block;background:var(--gold);color:#050505;padding:15px 22px;border-radius:16px;text-decoration:none;font-weight:900;box-shadow:0 10px 28px rgba(246,196,83,.22)}
+.lock-note{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.4}
+#appContent{display:none}
+
 </style>
 </head>
 
 <body>
+
+<div id="startBotScreen" class="lock-screen" style="display:none;">
+  <div class="lock-card">
+    <div class="lock-logo">
+      <div class="lock-logo-a">A</div>
+      <div class="lock-play"></div>
+    </div>
+    <div class="lock-title">🔒 Запустите бота</div>
+    <p class="lock-text">Чтобы открыть каталог сериалов, сначала запустите Art_aTV Bot.</p>
+    <a class="lock-btn" href="https://t.me/Art_aTV_bot?start=from_miniapp">Запустить бота</a>
+    <div class="lock-note">После запуска вернитесь в каталог и обновите Mini App.</div>
+  </div>
+</div>
+
+<div id="appContent">
 
 <div class="support"><a href="https://t.me/Art_aTV_support_bot">⚙️ Поддержка</a></div>
 
@@ -91,6 +118,8 @@ input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px s
   </div>
 </div>
 
+</div>
+
 <script>
 const firebaseConfig={apiKey:"AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",authDomain:"art-atv.firebaseapp.com",projectId:"art-atv",storageBucket:"art-atv.firebasestorage.app",messagingSenderId:"549965698241",appId:"1:549965698241:web:86cfa4dc6048d48d4ef040"};
 firebase.initializeApp(firebaseConfig);
@@ -128,6 +157,47 @@ function getUser(){
 }
 
 const currentUser=getUser();
+let appStarted=false;
+let onlineInterval=null;
+let sheetInterval=null;
+
+async function checkBotStarted(){
+  if(currentUser.source!=="telegram"){
+    showStartBotScreen();
+    return;
+  }
+
+  try{
+    const doc=await db.collection("bot_users").doc(currentUser.id).get();
+
+    if(doc.exists){
+      startApp();
+    }else{
+      showStartBotScreen();
+    }
+  }catch(e){
+    console.error("Bot check error",e);
+    showStartBotScreen();
+  }
+}
+
+function showStartBotScreen(){
+  document.getElementById("appContent").style.display="none";
+  document.getElementById("startBotScreen").style.display="flex";
+}
+
+function startApp(){
+  if(appStarted)return;
+  appStarted=true;
+
+  document.getElementById("startBotScreen").style.display="none";
+  document.getElementById("appContent").style.display="block";
+
+  saveUserVisit();
+  startOnlineHeartbeat();
+  loadSheet();
+  sheetInterval=setInterval(loadSheet,60000);
+}
 
 function saveUserVisit(){
   const now=Date.now();
@@ -162,16 +232,18 @@ function saveUserVisit(){
   },{merge:true});
 }
 
-saveUserVisit();
+function startOnlineHeartbeat(){
+  if(onlineInterval)return;
 
-setInterval(()=>{
-  db.collection("online").doc(currentUser.id).set({
-    user_id:currentUser.id,
-    username:currentUser.username,
-    source:currentUser.source,
-    last_seen:Date.now()
-  },{merge:true});
-},30000);
+  onlineInterval=setInterval(()=>{
+    db.collection("online").doc(currentUser.id).set({
+      user_id:currentUser.id,
+      username:currentUser.username,
+      source:currentUser.source,
+      last_seen:Date.now()
+    },{merge:true});
+  },30000);
+}
 
 function saveEvent(type,title=""){
   db.collection("events").add({
@@ -238,8 +310,7 @@ function loadSheet(){
   });
 }
 
-loadSheet();
-setInterval(loadSheet,60000);
+
 
 function createItem(i){
   const item=document.createElement("div");
@@ -403,6 +474,8 @@ document.getElementById("search").addEventListener("input",e=>{
 function scrollToTop(){
   window.scrollTo({top:0,behavior:"smooth"});
 }
+
+checkBotStarted();
 </script>
 
 </body>
