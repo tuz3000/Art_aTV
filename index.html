@@ -288,14 +288,24 @@ async function trackClick(title){
   }
 }
 
+function closeMiniAppSoon(){
+  if(tg?.close){
+    setTimeout(()=>{
+      try{tg.close();}catch(e){console.error("Не удалось закрыть Mini App",e);}
+    },250);
+  }
+}
+
 function openAccessLink(url){
   url=safeUrl(url);
   if(tg?.openTelegramLink && url.includes("t.me/")){
     tg.openTelegramLink(url);
+    closeMiniAppSoon();
     return;
   }
   if(tg?.openLink){
     tg.openLink(url);
+    closeMiniAppSoon();
     return;
   }
   window.location.href=url;
@@ -372,7 +382,13 @@ function createItem(i){
   btn.textContent="Оформить доступ";
   btn.addEventListener("click",async (e)=>{
     e.preventDefault();
-    await trackClick(i.title);
+
+    // Сохраняем клик, но не держим пользователя слишком долго в Mini App.
+    await Promise.race([
+      trackClick(i.title),
+      new Promise(resolve=>setTimeout(resolve,500))
+    ]);
+
     openAccessLink(i.link);
   });
 
