@@ -66,11 +66,30 @@ input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px s
       <div class="lock-logo-a">A</div>
       <div class="lock-play"></div>
     </div>
-    <div class="lock-title">🔒 Запустите бота</div>
-    <p class="lock-text">Чтобы открыть каталог сериалов, сначала запустите Art_aTV Bot.</p>
-    <a class="lock-btn" href="https://t.me/Art_aTV_bot?start=from_miniapp" onclick="markBotOpenClicked()">Запустить бота</a>
-    <button id="openCatalogBtn" class="lock-btn secondary-lock-btn" style="display:none;margin-top:12px;border:none;cursor:pointer;" onclick="confirmBotStarted()">Я запустил бота — открыть каталог</button>
-    <div class="lock-note">После запуска бота вернитесь сюда и нажмите «Открыть каталог».</div>
+
+    <div class="lock-title">Добро пожаловать в Art_aTV</div>
+
+    <p class="lock-text">
+      Для доступа к каталогу необходимо <b>один раз</b> запустить Telegram-бота.<br><br>
+      После запуска бот автоматически свяжет ваш аккаунт и откроет полный доступ к каталогу.
+    </p>
+
+    <a class="lock-btn"
+       href="https://t.me/Art_aTV_bot?start=from_miniapp"
+       onclick="markBotOpenClicked()">
+       🚀 Открыть Telegram-бота
+    </a>
+
+    <button id="openCatalogBtn"
+      class="lock-btn secondary-lock-btn"
+      style="display:none;margin-top:12px;border:none;cursor:pointer;"
+      onclick="confirmBotStarted()">
+      ✅ Я запустил бота — открыть каталог
+    </button>
+
+    <div class="lock-note">
+      ✓ Это потребуется только при первом входе.
+    </div>
   </div>
 </div>
 
