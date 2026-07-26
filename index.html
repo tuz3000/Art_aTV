@@ -5,9 +5,18 @@
 <title>Art_aTV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">function openMenu(){sideMenu.classList.add('open');menuOverlay.style.display='block';}
+function closeMenu(){sideMenu.classList.remove('open');menuOverlay.style.display='none';}
+function toggleFaq(){faqBox.style.display=faqBox.style.display==='block'?'none':'block';}
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js">function openMenu(){sideMenu.classList.add('open');menuOverlay.style.display='block';}
+function closeMenu(){sideMenu.classList.remove('open');menuOverlay.style.display='none';}
+function toggleFaq(){faqBox.style.display=faqBox.style.display==='block'?'none':'block';}
+</script>
+<script src="https://telegram.org/js/telegram-web-app.js">function openMenu(){sideMenu.classList.add('open');menuOverlay.style.display='block';}
+function closeMenu(){sideMenu.classList.remove('open');menuOverlay.style.display='none';}
+function toggleFaq(){faqBox.style.display=faqBox.style.display==='block'?'none':'block';}
+</script>
 
 <style>
 :root{--gold:#f6c453;--muted:#9b9b9b}
@@ -55,6 +64,13 @@ input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px s
 .lock-note{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.4}
 #appContent{display:none}
 
+
+.menu-btn{position:fixed;right:12px;top:14px;z-index:1000;width:42px;height:42px;border:none;border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font-size:26px;cursor:pointer;backdrop-filter:blur(12px)}
+.menu-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2998}
+.side-menu{position:fixed;top:0;right:-320px;width:300px;height:100%;background:#111;border-left:1px solid rgba(255,255,255,.08);z-index:2999;transition:right .25s;padding:20px}
+.side-menu.open{right:0}
+.menu-link{display:block;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.08);color:#fff;text-decoration:none;font-weight:700}
+.faq-box{display:none;margin-top:15px;font-size:14px;line-height:1.6;color:#ddd}
 </style>
 </head>
 
@@ -95,7 +111,7 @@ input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px s
 
 <div id="appContent">
 
-<div class="support"><a href="https://t.me/Art_aTV_support_bot">⚙️ Поддержка</a></div>
+<button class="menu-btn" onclick="openMenu()">⋮</button><div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div><div class="side-menu" id="sideMenu"><h2>Art_aTV</h2><a class="menu-link" href="https://t.me/Art_aTV_bot">🤖 Telegram-бот</a><a class="menu-link" href="https://t.me/Art_aTV_support_bot">💬 Поддержка</a><a class="menu-link" href="https://t.me/Art_aTV">📢 Основной канал</a><a class="menu-link" href="#" onclick="toggleFaq();return false;">❓ FAQ</a><div class="faq-box" id="faqBox"><b>Если что-то не работает:</b><br>• Проверьте VPN<br>• Освободите память<br>• Очистите кэш Telegram<br><br>Если проблема осталась — обратитесь в поддержку.</div></div>
 
 <div class="header">
   <div class="brand">
@@ -554,6 +570,9 @@ document.addEventListener("visibilitychange",()=>{
 });
 
 checkBotStarted();
+function openMenu(){sideMenu.classList.add('open');menuOverlay.style.display='block';}
+function closeMenu(){sideMenu.classList.remove('open');menuOverlay.style.display='none';}
+function toggleFaq(){faqBox.style.display=faqBox.style.display==='block'?'none':'block';}
 </script>
 
 </body>
