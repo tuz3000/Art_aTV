@@ -288,26 +288,30 @@ async function trackClick(title){
   return counted;
 }
 
-function closeMiniAppSoon(){
-  if(tg?.close){
-    setTimeout(()=>{
-      try{tg.close();}catch(e){console.error("Не удалось закрыть Mini App",e);}
-    },250);
-  }
-}
-
 function openAccessLink(url){
   url=safeUrl(url);
+
+  // Переход выполняем сразу из пользовательского клика.
+  // Mini App не закрываем принудительно, чтобы после возврата
+  // пользователь мог снова нажать на этот или другой сериал.
   if(tg?.openTelegramLink && url.includes("t.me/")){
-    tg.openTelegramLink(url);
-    closeMiniAppSoon();
-    return;
+    try{
+      tg.openTelegramLink(url);
+      return;
+    }catch(err){
+      console.error("Не удалось открыть Telegram-ссылку через WebApp API",err);
+    }
   }
+
   if(tg?.openLink){
-    tg.openLink(url);
-    closeMiniAppSoon();
-    return;
+    try{
+      tg.openLink(url);
+      return;
+    }catch(err){
+      console.error("Не удалось открыть ссылку через WebApp API",err);
+    }
   }
+
   window.location.href=url;
 }
 
@@ -470,16 +474,13 @@ function createItem(i){
   btn.href=i.link;
   btn.target="_blank";
   btn.textContent="Оформить доступ";
-  btn.addEventListener("click",async (e)=>{
+  btn.addEventListener("click",(e)=>{
     e.preventDefault();
 
-    // Сохраняем статистику, но не задерживаем переход дольше 500 мс.
-    await Promise.race([
-      trackClick(i.title),
-      new Promise(resolve=>setTimeout(resolve,500))
-    ]);
-
+    // Открываем доступ сразу. Статистика пишется параллельно и
+    // никак не влияет на переход, даже при повторном нажатии.
     openAccessLink(i.link);
+    trackClick(i.title).catch(err=>console.error("Не удалось записать клик",err));
   });
 
   item.appendChild(img);
