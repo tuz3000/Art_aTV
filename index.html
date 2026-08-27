@@ -116,14 +116,7 @@ firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
 let tg=window.Telegram?.WebApp;
-if(tg){
-  try{
-    tg.ready?.();
-    tg.enableVerticalSwipes?.();
-  }catch(err){
-    console.warn("Не удалось настроить Telegram Mini App",err);
-  }
-}
+if(tg){tg.expand();}
 
 function normalizeTitle(title){
   return String(title||"").toLowerCase().replace(/ё/g,"е").replace(/[^a-zа-я0-9]+/gi," ").replace(/\s+/g," ").trim();
@@ -298,20 +291,21 @@ async function trackClick(title){
 function openAccessLink(url){
   url=safeUrl(url);
 
-  // Разрешаем пользователю свернуть Mini App вниз жестом.
-  // Telegram не предоставляет отдельного метода minimize().
-  if(tg?.enableVerticalSwipes){
-    try{
-      tg.enableVerticalSwipes();
-    }catch(err){
-      console.warn("Не удалось включить вертикальные свайпы",err);
-    }
-  }
-
-  // Telegram-ссылку открываем внутри Telegram, а Mini App НЕ закрываем.
+  // Telegram-ссылку открываем внутри Telegram.
+  // После передачи deep-link закрываем только текущий Mini App WebView,
+  // чтобы пользователь сразу увидел чат бота и продолжил оформление.
   if(tg?.openTelegramLink && url.includes("t.me/")){
     try{
       tg.openTelegramLink(url);
+
+      setTimeout(()=>{
+        try{
+          tg.close();
+        }catch(err){
+          console.error("Не удалось убрать Mini App",err);
+        }
+      },300);
+
       return;
     }catch(err){
       console.error("Не удалось открыть Telegram-ссылку через WebApp API",err);
