@@ -32,8 +32,8 @@ body{margin:0;font-family:Arial,sans-serif;background:radial-gradient(circle at 
 .item{display:flex;align-items:center;gap:14px;background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.07);padding:12px;border-radius:18px;scroll-margin-top:120px;transition:.25s ease;box-shadow:0 12px 30px rgba(0,0,0,.28)}
 .item.highlight{outline:2px solid var(--gold);box-shadow:0 0 28px rgba(246,196,83,.45);transform:scale(1.02)}
 .poster{width:86px;height:128px;object-fit:cover;border-radius:12px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.45)}
-.title{flex:1;font-size:18px;line-height:1.2;font-weight:900}
-.btn{background:white;color:#050505;padding:10px 13px;border-radius:12px;font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap}
+.title{flex:1;min-width:0;font-size:18px;line-height:1.2;font-weight:900;overflow-wrap:anywhere;word-break:normal;hyphens:auto;-webkit-hyphens:auto;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.btn{flex:0 0 auto;margin-left:auto;background:white;color:#050505;padding:10px 13px;border-radius:12px;font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap;text-align:center}
 #popular .item{background:rgba(246,196,83,.08);border:1px solid rgba(246,196,83,.18)}
 #newList .item{background:rgba(255,255,255,.045)}
 #scrollTopBtn{position:fixed;right:18px;bottom:18px;width:54px;height:54px;display:none;align-items:center;justify-content:center;border:none;border-radius:50%;background:rgba(255,255,255,.08);backdrop-filter:blur(14px);color:white;font-size:24px;cursor:pointer;z-index:9999;box-shadow:0 4px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.15)}
