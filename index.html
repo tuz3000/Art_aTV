@@ -5,18 +5,9 @@
 <title>Art_aTV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">function openMenu(){sideMenu.classList.add('open');menuOverlay.style.display='block';}
-function closeMenu(){sideMenu.classList.remove('open');menuOverlay.style.display='none';}
-function toggleFaq(){faqBox.style.display=faqBox.style.display==='block'?'none':'block';}
-</script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js">function openMenu(){sideMenu.classList.add('open');menuOverlay.style.display='block';}
-function closeMenu(){sideMenu.classList.remove('open');menuOverlay.style.display='none';}
-function toggleFaq(){faqBox.style.display=faqBox.style.display==='block'?'none':'block';}
-</script>
-<script src="https://telegram.org/js/telegram-web-app.js">function openMenu(){sideMenu.classList.add('open');menuOverlay.style.display='block';}
-function closeMenu(){sideMenu.classList.remove('open');menuOverlay.style.display='none';}
-function toggleFaq(){faqBox.style.display=faqBox.style.display==='block'?'none':'block';}
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 :root{--gold:#f6c453;--muted:#9b9b9b}
@@ -42,7 +33,7 @@ input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px s
 .btn{background:white;color:#050505;padding:10px 13px;border-radius:12px;font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap}
 #popular .item{background:rgba(246,196,83,.08);border:1px solid rgba(246,196,83,.18)}
 #newList .item{background:rgba(255,255,255,.045)}
-#scrollTopBtn{position:fixed;right:18px;bottom:18px;width:54px;height:54px;display:flex;align-items:center;justify-content:center;border:none;border-radius:50%;background:rgba(255,255,255,.08);backdrop-filter:blur(14px);color:white;font-size:24px;cursor:pointer;z-index:9999;box-shadow:0 4px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.15)}
+#scrollTopBtn{position:fixed;right:18px;bottom:18px;width:54px;height:54px;display:none;align-items:center;justify-content:center;border:none;border-radius:50%;background:rgba(255,255,255,.08);backdrop-filter:blur(14px);color:white;font-size:24px;cursor:pointer;z-index:9999;box-shadow:0 4px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.15)}
 .modal{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.86);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:18px}
 .modal-box{width:100%;max-width:420px;background:#111114;border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:16px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .modal-box img{width:100%;max-height:540px;object-fit:cover;border-radius:16px}
@@ -58,6 +49,9 @@ input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px s
 .side-menu.open{right:0}
 .menu-link{display:block;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.08);color:#fff;text-decoration:none;font-weight:700}
 .faq-box{display:none;margin-top:15px;font-size:14px;line-height:1.6;color:#ddd}
+.empty-state{margin:8px 12px 18px;padding:22px 16px;text-align:center;color:#cfcfcf;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-radius:18px;line-height:1.5}
+.clear-search-btn,.retry-btn{margin-top:12px;padding:10px 14px;border:none;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;font-weight:800;cursor:pointer}
+.retry-btn{margin:0 0 0 8px;padding:7px 10px;font-size:12px}
 </style>
 </head>
 
@@ -166,20 +160,30 @@ function startApp(){
 
 function saveUserVisit(){
   const now=Date.now();
+  const userRef=db.collection("users").doc(currentUser.id);
 
-  db.collection("users").doc(currentUser.id).set({
-    id:currentUser.id,
-    username:currentUser.username,
-    first_name:currentUser.first_name,
-    last_name:currentUser.last_name,
-    source:currentUser.source,
-    first_visit:firebase.firestore.FieldValue.serverTimestamp(),
-    last_visit:now,
-    opens:firebase.firestore.FieldValue.increment(1),
-    user_agent:navigator.userAgent,
-    language:navigator.language||"",
-    platform:navigator.platform||""
-  },{merge:true});
+  db.runTransaction(async transaction=>{
+    const snap=await transaction.get(userRef);
+    const data={
+      id:currentUser.id,
+      username:currentUser.username,
+      first_name:currentUser.first_name,
+      last_name:currentUser.last_name,
+      source:currentUser.source,
+      last_visit:now,
+      opens:firebase.firestore.FieldValue.increment(1),
+      user_agent:navigator.userAgent,
+      language:navigator.language||"",
+      platform:navigator.platform||""
+    };
+
+    // first_visit записывается только один раз - при создании пользователя.
+    if(!snap.exists){
+      data.first_visit=firebase.firestore.FieldValue.serverTimestamp();
+    }
+
+    transaction.set(userRef,data,{merge:true});
+  }).catch(err=>console.error("Не удалось сохранить пользователя",err));
 
   db.collection("visits").add({
     user_id:currentUser.id,
@@ -187,14 +191,14 @@ function saveUserVisit(){
     source:currentUser.source,
     time:now,
     page:"catalog"
-  });
+  }).catch(err=>console.error("Не удалось сохранить визит",err));
 
   db.collection("online").doc(currentUser.id).set({
     user_id:currentUser.id,
     username:currentUser.username,
     source:currentUser.source,
     last_seen:now
-  },{merge:true});
+  },{merge:true}).catch(err=>console.error("Не удалось обновить online",err));
 }
 
 function startOnlineHeartbeat(){
@@ -210,29 +214,73 @@ function startOnlineHeartbeat(){
   },30000);
 }
 
-function saveEvent(type,title=""){
+function saveEvent(type,title="",extra={}){
   return db.collection("events").add({
     type,
     title,
     user_id:currentUser.id,
     username:currentUser.username,
     source:currentUser.source,
-    time:Date.now()
+    time:Date.now(),
+    ...extra
   });
 }
 
 async function trackClick(title){
   const key=normalizeTitle(title);
+  const now=Date.now();
+  const countWindow=24*60*60*1000;
+  const clickRef=db.collection("clicks").doc(key);
+  const userRef=db.collection("users").doc(currentUser.id);
+  let counted=false;
+
   try{
-    await db.collection("clicks").doc(key).set({
-      title:title,
-      count:firebase.firestore.FieldValue.increment(1),
-      time:Date.now()
-    },{merge:true});
-    await saveEvent("access_click",title);
+    counted=await db.runTransaction(async transaction=>{
+      const userSnap=await transaction.get(userRef);
+      const userData=userSnap.exists ? userSnap.data() : {};
+      const oldClicks=(userData.top_clicks && typeof userData.top_clicks==="object") ? userData.top_clicks : {};
+      const recentClicks={};
+
+      // Храним только клики за последние 24 часа, чтобы поле не росло бесконечно.
+      Object.entries(oldClicks).forEach(([titleKey,time])=>{
+        const ts=Number(time||0);
+        if(now-ts<countWindow)recentClicks[titleKey]=ts;
+      });
+
+      // Один пользователь увеличивает TOP-счетчик конкретного сериала максимум 1 раз за 24 часа.
+      if(recentClicks[key] && now-recentClicks[key]<countWindow){
+        return false;
+      }
+
+      recentClicks[key]=now;
+      const userPatch={top_clicks:recentClicks};
+
+      // На случай очень быстрого клика до завершения первого saveUserVisit.
+      if(!userSnap.exists || !userData.first_visit){
+        userPatch.id=currentUser.id;
+        userPatch.username=currentUser.username;
+        userPatch.first_name=currentUser.first_name;
+        userPatch.last_name=currentUser.last_name;
+        userPatch.source=currentUser.source;
+        userPatch.first_visit=firebase.firestore.FieldValue.serverTimestamp();
+      }
+
+      transaction.set(userRef,userPatch,{merge:true});
+      transaction.set(clickRef,{
+        title:title,
+        count:firebase.firestore.FieldValue.increment(1),
+        time:now
+      },{merge:true});
+
+      return true;
+    });
+
+    await saveEvent("access_click",title,{counted_in_top:counted});
   }catch(err){
     console.error("Не удалось записать клик",err);
   }
+
+  return counted;
 }
 
 function closeMiniAppSoon(){
@@ -263,45 +311,129 @@ function trackKP(title){saveEvent("kinopoisk_click",title);}
 
 const SHEET="https://docs.google.com/spreadsheets/d/1-mtEef4gMgTEL0HfgWGGTQON8jkXSrFXgEGmqt-0ta4/export?format=csv";
 
+const POSTER_PLACEHOLDER="data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="344" height="512" viewBox="0 0 344 512">
+  <rect width="344" height="512" fill="#151515"/>
+  <rect x="16" y="16" width="312" height="480" rx="28" fill="#202020" stroke="#3a3a3a"/>
+  <text x="172" y="242" text-anchor="middle" fill="#f6c453" font-family="Arial" font-size="42" font-weight="700">A▶</text>
+  <text x="172" y="292" text-anchor="middle" fill="#bdbdbd" font-family="Arial" font-size="22">Нет постера</text>
+</svg>`);
+
 let allData=[];
 let lastSheetText="";
 let popularSubscribed=false;
+let sheetLoading=false;
 
 function parseCSVRow(row){
-  return row.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(v=>v.replace(/^"|"$/g,"").trim());
+  return row.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(v=>v.replace(/^"|"$/g,"").replace(/""/g,'"').trim());
 }
 
-function loadSheet(){
-  fetch(SHEET+"&cacheBust="+Date.now())
-  .then(r=>r.text())
-  .then(t=>{
-    if(t===lastSheetText && allData.length)return;
+function safeMediaUrl(url){
+  url=String(url||"").trim();
+  if(!url)return "";
+  if(url.startsWith("http://")||url.startsWith("https://"))return url;
+  return "https://"+url;
+}
+
+function parseDateAdded(value){
+  value=String(value||"").trim();
+  if(!value)return 0;
+
+  let m=value.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/);
+  if(m){
+    const d=Number(m[1]),mo=Number(m[2])-1,y=Number(m[3]);
+    const ts=new Date(y,mo,d).getTime();
+    return Number.isFinite(ts)?ts:0;
+  }
+
+  m=value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(m){
+    const y=Number(m[1]),mo=Number(m[2])-1,d=Number(m[3]);
+    const ts=new Date(y,mo,d).getTime();
+    return Number.isFinite(ts)?ts:0;
+  }
+
+  const ts=Date.parse(value);
+  return Number.isFinite(ts)?ts:0;
+}
+
+function updateCounter(shownCount=allData.length){
+  const counter=document.getElementById("counter");
+  if(!allData.length){
+    counter.innerText="🎬 Всего сериалов: 0 · автообновление 60 сек";
+    return;
+  }
+
+  if(shownCount===allData.length){
+    counter.innerText="🎬 Всего сериалов: "+allData.length+" · автообновление 60 сек";
+  }else{
+    counter.innerText="🔎 Найдено: "+shownCount+" из "+allData.length+" · автообновление 60 сек";
+  }
+}
+
+function showLoadError(){
+  const counter=document.getElementById("counter");
+  counter.innerHTML='⚠️ Не удалось загрузить Google Sheets <button class="retry-btn" onclick="loadSheet()">Повторить</button>';
+
+  if(!allData.length){
+    const box=document.getElementById("list");
+    box.innerHTML='<div class="empty-state">Каталог временно недоступен.<br>Нажмите «Повторить» выше.</div>';
+  }
+}
+
+async function loadSheet(){
+  if(sheetLoading)return;
+  sheetLoading=true;
+
+  try{
+    const r=await fetch(SHEET+"&cacheBust="+Date.now(),{cache:"no-store"});
+    if(!r.ok){
+      throw new Error("HTTP "+r.status);
+    }
+
+    const t=await r.text();
+    const preview=t.slice(0,500).toLowerCase();
+    if(!t.trim() || preview.includes("<html") || preview.includes("<!doctype html")){
+      throw new Error("Google Sheets вернул некорректный ответ");
+    }
+
+    if(t===lastSheetText && allData.length){
+      updateCounter(getFilteredData().length);
+      return;
+    }
     lastSheetText=t;
 
-    const rows=t.trim().split("\n").slice(1);
+    const rows=t.trim().split(/\r?\n/).slice(1);
 
-    allData=rows.map(r=>{
+    allData=rows.map((r,index)=>{
       const c=parseCSVRow(r);
       return {
         title:(c[0]||"").trim(),
         link:safeUrl(c[1]||""),
-        poster:safeUrl(c[2]||""),
-        kp:safeUrl(c[3]||"")
+        poster:safeMediaUrl(c[2]||""),
+        kp:safeUrl(c[3]||""),
+        date_added:(c[4]||"").trim(),
+        date_added_ts:parseDateAdded(c[4]||""),
+        row_index:index
       };
     }).filter(i=>i.title);
 
-    document.getElementById("counter").innerText="🎬 Всего сериалов: "+allData.length+" · автообновление 60 сек";
-
-    const q=normalizeTitle(document.getElementById("search").value);
-    render(allData.filter(i=>normalizeTitle(i.title).includes(q)));
+    render(getFilteredData());
     renderNew(allData);
     loadPopular();
-  })
-  .catch(()=>{
-    document.getElementById("counter").innerText="⚠️ Не удалось загрузить Google Sheets";
-  });
+  }catch(err){
+    console.error("Не удалось загрузить Google Sheets",err);
+    showLoadError();
+  }finally{
+    sheetLoading=false;
+  }
 }
 
+function getFilteredData(){
+  const q=normalizeTitle(document.getElementById("search").value);
+  if(!q)return allData;
+  return allData.filter(i=>normalizeTitle(i.title).includes(q));
+}
 
 
 function createItem(i){
@@ -312,8 +444,14 @@ function createItem(i){
 
   const img=document.createElement("img");
   img.className="poster";
-  img.src=i.poster;
+  img.src=i.poster||POSTER_PLACEHOLDER;
   img.alt=i.title;
+  img.loading="lazy";
+  img.decoding="async";
+  img.onerror=function(){
+    this.onerror=null;
+    this.src=POSTER_PLACEHOLDER;
+  };
   img.addEventListener("click",()=>{
     openPoster(i);
   });
@@ -330,7 +468,7 @@ function createItem(i){
   btn.addEventListener("click",async (e)=>{
     e.preventDefault();
 
-    // Сохраняем клик, но не держим пользователя слишком долго в Mini App.
+    // Сохраняем статистику, но не задерживаем переход дольше 500 мс.
     await Promise.race([
       trackClick(i.title),
       new Promise(resolve=>setTimeout(resolve,500))
@@ -349,19 +487,53 @@ function createItem(i){
 function render(list){
   const box=document.getElementById("list");
   box.innerHTML="";
-  list.forEach(i=>box.appendChild(createItem(i)));
+
+  if(!list.length){
+    const empty=document.createElement("div");
+    empty.className="empty-state";
+
+    if(allData.length){
+      empty.innerHTML='🔍 По вашему запросу ничего не найдено.<br><button class="clear-search-btn" onclick="clearSearch()">Очистить поиск</button>';
+    }else{
+      empty.textContent="В каталоге пока нет сериалов.";
+    }
+
+    box.appendChild(empty);
+  }else{
+    list.forEach(i=>box.appendChild(createItem(i)));
+  }
+
+  updateCounter(list.length);
 }
 
 function renderNew(list){
   const box=document.getElementById("newList");
   box.innerHTML="";
-  list.slice(-5).reverse().forEach(i=>box.appendChild(createItem(i)));
+
+  const hasDates=list.some(i=>i.date_added_ts>0);
+  const newest=hasDates
+    ? [...list].sort((a,b)=>(b.date_added_ts-a.date_added_ts)||(b.row_index-a.row_index)).slice(0,5)
+    : list.slice(-5).reverse();
+
+  newest.forEach(i=>box.appendChild(createItem(i)));
+}
+
+function clearSearch(){
+  const search=document.getElementById("search");
+  search.value="";
+  render(allData);
+  search.focus();
 }
 
 function openPoster(i){
   trackPoster(i.title);
 
-  document.getElementById("modalPoster").src=i.poster;
+  const modalPoster=document.getElementById("modalPoster");
+  modalPoster.onerror=function(){
+    this.onerror=null;
+    this.src=POSTER_PLACEHOLDER;
+  };
+  modalPoster.src=i.poster||POSTER_PLACEHOLDER;
   document.getElementById("modalTitle").innerText=i.title;
 
   const kpBtn=document.getElementById("modalKp");
@@ -466,14 +638,21 @@ function toggleNew(){
   document.getElementById("newArrow").innerText=openNew?"▴":"▾";
 }
 
-document.getElementById("search").addEventListener("input",e=>{
-  const q=normalizeTitle(e.target.value);
-  render(allData.filter(i=>normalizeTitle(i.title).includes(q)));
+document.getElementById("search").addEventListener("input",()=>{
+  render(getFilteredData());
 });
 
 function scrollToTop(){
   window.scrollTo({top:0,behavior:"smooth"});
 }
+
+function updateScrollTopButton(){
+  const btn=document.getElementById("scrollTopBtn");
+  btn.style.display=window.scrollY>600?"flex":"none";
+}
+
+window.addEventListener("scroll",updateScrollTopButton,{passive:true});
+updateScrollTopButton();
 
 document.addEventListener("visibilitychange",()=>{
   if(!document.hidden && !appStarted){
