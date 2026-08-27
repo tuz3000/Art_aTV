@@ -22,7 +22,10 @@ body{margin:0;font-family:Arial,sans-serif;background:radial-gradient(circle at 
 .support{position:fixed;right:12px;top:14px;z-index:999}
 .support a{display:block;background:rgba(255,255,255,.08);color:#ddd;padding:9px 12px;border:1px solid rgba(255,255,255,.12);border-radius:12px;text-decoration:none;font-size:12px;font-weight:800;backdrop-filter:blur(12px)}
 .counter{padding:12px 16px 4px;color:var(--muted);font-size:13px}
-input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.06);color:white;font-size:16px;outline:none}
+.search-wrap{position:relative;width:92%;margin:10px 4%}
+#search{width:100%;margin:0;padding:15px 48px 15px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.06);color:white;font-size:16px;outline:none}
+.search-clear{display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:none;border-radius:50%;background:transparent;color:#aaa;font-size:26px;line-height:1;cursor:pointer;align-items:center;justify-content:center;padding:0}
+.search-clear:hover{color:#fff;background:rgba(255,255,255,.08)}
 .section{padding:18px 16px 10px;font-weight:900;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
 .section span{color:var(--gold)}
 .list{display:flex;flex-direction:column;gap:14px;padding:10px 12px}
@@ -50,8 +53,7 @@ input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px s
 .menu-link{display:block;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.08);color:#fff;text-decoration:none;font-weight:700}
 .faq-box{display:none;margin-top:15px;font-size:14px;line-height:1.6;color:#ddd}
 .empty-state{margin:8px 12px 18px;padding:22px 16px;text-align:center;color:#cfcfcf;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-radius:18px;line-height:1.5}
-.clear-search-btn,.retry-btn{margin-top:12px;padding:10px 14px;border:none;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;font-weight:800;cursor:pointer}
-.retry-btn{margin:0 0 0 8px;padding:7px 10px;font-size:12px}
+.retry-btn{margin:0 0 0 8px;padding:7px 10px;border:none;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;font-weight:800;cursor:pointer;font-size:12px}
 </style>
 </head>
 
@@ -73,7 +75,10 @@ input{width:92%;margin:10px 4%;padding:15px 16px;border-radius:16px;border:1px s
 </div>
 
 <div class="counter" id="counter">Загрузка...</div>
-<input id="search" placeholder="Поиск сериалов...">
+<div class="search-wrap">
+  <input id="search" placeholder="Поиск сериалов..." autocomplete="off">
+  <button id="searchClearBtn" class="search-clear" type="button" aria-label="Очистить поиск" onclick="clearSearch()">×</button>
+</div>
 
 <div class="section" onclick="togglePopular()">
   <div><span>TOP 5</span> популярных</div>
@@ -493,7 +498,7 @@ function render(list){
     empty.className="empty-state";
 
     if(allData.length){
-      empty.innerHTML='🔍 По вашему запросу ничего не найдено.<br><button class="clear-search-btn" onclick="clearSearch()">Очистить поиск</button>';
+      empty.textContent='🔍 По вашему запросу ничего не найдено.';
     }else{
       empty.textContent="В каталоге пока нет сериалов.";
     }
@@ -518,9 +523,16 @@ function renderNew(list){
   newest.forEach(i=>box.appendChild(createItem(i)));
 }
 
+function updateSearchClearButton(){
+  const search=document.getElementById("search");
+  const btn=document.getElementById("searchClearBtn");
+  if(btn)btn.style.display=search.value?"flex":"none";
+}
+
 function clearSearch(){
   const search=document.getElementById("search");
   search.value="";
+  updateSearchClearButton();
   render(allData);
   search.focus();
 }
@@ -594,6 +606,7 @@ function renderPopular(list){
 
 function scrollToTitle(title){
   document.getElementById("search").value="";
+  updateSearchClearButton();
   render(allData);
 
   setTimeout(()=>{
@@ -639,8 +652,10 @@ function toggleNew(){
 }
 
 document.getElementById("search").addEventListener("input",()=>{
+  updateSearchClearButton();
   render(getFilteredData());
 });
+updateSearchClearButton();
 
 function scrollToTop(){
   window.scrollTo({top:0,behavior:"smooth"});
