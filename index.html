@@ -288,22 +288,34 @@ async function trackClick(title){
   return counted;
 }
 
+function isTelegramMiniApp(){
+  return !!(tg && typeof tg.initData==="string" && tg.initData.length>0);
+}
+
 function openAccessLink(url){
   url=safeUrl(url);
+  const insideTelegram=isTelegramMiniApp();
 
-  // Переход выполняем сразу из пользовательского клика.
-  // Mini App не закрываем принудительно, чтобы после возврата
-  // пользователь мог снова нажать на этот или другой сериал.
-  if(tg?.openTelegramLink && url.includes("t.me/")){
+  // Внутри Telegram Mini App t.me-ссылку открываем нативным API.
+  // Начиная с Bot API 7.0 openTelegramLink() сам Mini App не закрывает,
+  // поэтому закрываем WebView отдельно, чтобы пользователь сразу увидел
+  // чат бота и переданный start-параметр.
+  if(insideTelegram && tg?.openTelegramLink && url.includes("t.me/")){
     try{
       tg.openTelegramLink(url);
+      setTimeout(()=>{
+        try{tg.close();}catch(err){
+          console.error("Не удалось закрыть Mini App после перехода",err);
+        }
+      },200);
       return;
     }catch(err){
       console.error("Не удалось открыть Telegram-ссылку через WebApp API",err);
     }
   }
 
-  if(tg?.openLink){
+  // Внешние ссылки внутри Mini App открываем штатным Telegram API.
+  if(insideTelegram && tg?.openLink){
     try{
       tg.openLink(url);
       return;
@@ -312,6 +324,7 @@ function openAccessLink(url){
     }
   }
 
+  // В обычном браузере сохраняем стандартное поведение сайта.
   window.location.href=url;
 }
 
