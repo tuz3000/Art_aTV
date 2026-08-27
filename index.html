@@ -129,7 +129,7 @@ function makeId(title){
 function safeUrl(url){
   url=String(url||"").trim();
   if(!url)return "https://www.kinopoisk.ru/";
-  if(url.startsWith("http://")||url.startsWith("https://")||url.startsWith("tg://"))return url;
+  if(url.startsWith("http://")||url.startsWith("https://"))return url;
   return "https://" + url;
 }
 
@@ -288,42 +288,22 @@ async function trackClick(title){
   return counted;
 }
 
-function isTelegramMiniApp(){
-  return !!(tg && typeof tg.initData==="string" && tg.initData.length>0);
-}
-
 function openAccessLink(url){
   url=safeUrl(url);
-  const insideTelegram=isTelegramMiniApp();
-  const platform=String(tg?.platform||"").toLowerCase();
-  const isTelegramUrl=/^https:\/\/(?:www\.)?t\.me\//i.test(url);
 
-  if(insideTelegram && isTelegramUrl){
-    // Telegram iOS has recurring regressions with bot deep-links opened
-    // directly inside a Mini App. On iOS deliberately hand the HTTPS
-    // t.me link to the external browser: this reproduces the path that
-    // works when the catalogue is opened as a normal website.
-    if((platform==="ios" || platform==="macos") && tg?.openLink){
-      try{
-        tg.openLink(url);
-        return;
-      }catch(err){
-        console.error("Не удалось открыть Telegram-ссылку через внешний браузер",err);
-      }
-    }
-
-    // Other Telegram clients use the native Telegram link opener.
-    if(tg?.openTelegramLink){
-      try{
-        tg.openTelegramLink(url);
-        return;
-      }catch(err){
-        console.error("Не удалось открыть Telegram-ссылку через WebApp API",err);
-      }
+  // Переход выполняем сразу из пользовательского клика.
+  // Mini App не закрываем принудительно, чтобы после возврата
+  // пользователь мог снова нажать на этот или другой сериал.
+  if(tg?.openTelegramLink && url.includes("t.me/")){
+    try{
+      tg.openTelegramLink(url);
+      return;
+    }catch(err){
+      console.error("Не удалось открыть Telegram-ссылку через WebApp API",err);
     }
   }
 
-  if(insideTelegram && tg?.openLink){
+  if(tg?.openLink){
     try{
       tg.openLink(url);
       return;
@@ -491,25 +471,16 @@ function createItem(i){
 
   const btn=document.createElement("a");
   btn.className="btn";
-
-  const accessUrl=safeUrl(i.link);
-  const isTelegramLink=/^https:\/\/(?:www\.)?t\.me\//i.test(accessUrl);
-
-  // Всегда храним исходный HTTPS deep-link из Google Sheets.
-  // Способ открытия выбирается только в момент пользовательского клика.
-  btn.href=accessUrl;
-  if(!isTelegramLink){
-    btn.target="_blank";
-    btn.rel="noopener";
-  }
-
+  btn.href=i.link;
+  btn.target="_blank";
   btn.textContent="Оформить доступ";
   btn.addEventListener("click",(e)=>{
-    // Статистика идет параллельно и не влияет на навигацию.
-    trackClick(i.title).catch(err=>console.error("Не удалось записать клик",err));
-
     e.preventDefault();
-    openAccessLink(accessUrl);
+
+    // Открываем доступ сразу. Статистика пишется параллельно и
+    // никак не влияет на переход, даже при повторном нажатии.
+    openAccessLink(i.link);
+    trackClick(i.title).catch(err=>console.error("Не удалось записать клик",err));
   });
 
   item.appendChild(img);
