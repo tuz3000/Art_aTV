@@ -133,23 +133,6 @@ function safeUrl(url){
   return "https://" + url;
 }
 
-function telegramBotDeepLink(url){
-  const original=safeUrl(url);
-  try{
-    const parsed=new URL(original);
-    const host=parsed.hostname.toLowerCase();
-    if(host!=="t.me" && host!=="www.t.me")return original;
-
-    const botUsername=parsed.pathname.replace(/^\/+/,"").split("/")[0];
-    const start=parsed.searchParams.get("start");
-    if(!botUsername || botUsername.startsWith("+") || !start)return original;
-
-    return "tg://resolve?domain="+encodeURIComponent(botUsername)+"&start="+encodeURIComponent(start);
-  }catch(err){
-    return original;
-  }
-}
-
 function getUser(){
   const u=tg?.initDataUnsafe?.user;
   if(u){
@@ -312,26 +295,34 @@ function isTelegramMiniApp(){
 function openAccessLink(url){
   url=safeUrl(url);
   const insideTelegram=isTelegramMiniApp();
+  const platform=String(tg?.platform||"").toLowerCase();
+  const isTelegramUrl=/^https:\/\/(?:www\.)?t\.me\//i.test(url);
 
-  // Внутри Telegram Mini App t.me-ссылку открываем нативным API.
-  // Начиная с Bot API 7.0 openTelegramLink() сам Mini App не закрывает,
-  // поэтому закрываем WebView отдельно, чтобы пользователь сразу увидел
-  // чат бота и переданный start-параметр.
-  if(insideTelegram && tg?.openTelegramLink && url.includes("t.me/")){
-    try{
-      tg.openTelegramLink(url);
-      setTimeout(()=>{
-        try{tg.close();}catch(err){
-          console.error("Не удалось закрыть Mini App после перехода",err);
-        }
-      },200);
-      return;
-    }catch(err){
-      console.error("Не удалось открыть Telegram-ссылку через WebApp API",err);
+  if(insideTelegram && isTelegramUrl){
+    // Telegram iOS has recurring regressions with bot deep-links opened
+    // directly inside a Mini App. On iOS deliberately hand the HTTPS
+    // t.me link to the external browser: this reproduces the path that
+    // works when the catalogue is opened as a normal website.
+    if((platform==="ios" || platform==="macos") && tg?.openLink){
+      try{
+        tg.openLink(url);
+        return;
+      }catch(err){
+        console.error("Не удалось открыть Telegram-ссылку через внешний браузер",err);
+      }
+    }
+
+    // Other Telegram clients use the native Telegram link opener.
+    if(tg?.openTelegramLink){
+      try{
+        tg.openTelegramLink(url);
+        return;
+      }catch(err){
+        console.error("Не удалось открыть Telegram-ссылку через WebApp API",err);
+      }
     }
   }
 
-  // Внешние ссылки внутри Mini App открываем штатным Telegram API.
   if(insideTelegram && tg?.openLink){
     try{
       tg.openLink(url);
@@ -341,7 +332,6 @@ function openAccessLink(url){
     }
   }
 
-  // В обычном браузере сохраняем стандартное поведение сайта.
   window.location.href=url;
 }
 
@@ -505,17 +495,9 @@ function createItem(i){
   const accessUrl=safeUrl(i.link);
   const isTelegramLink=/^https:\/\/(?:www\.)?t\.me\//i.test(accessUrl);
 
-  // В Telegram Mini App используем прямую tg://-схему для bot deep-link.
-  // Это официальный эквивалент t.me/<bot>?start=<parameter>.
-  // В обычном браузере оставляем исходную HTTPS-ссылку.
-  if(isTelegramMiniApp() && isTelegramLink){
-    btn.href=telegramBotDeepLink(accessUrl);
-  }else{
-    btn.href=accessUrl;
-  }
-
-  // Для Telegram deep-link не используем target=_blank: клик должен
-  // обрабатываться самим Telegram-клиентом в текущем пользовательском жесте.
+  // Всегда храним исходный HTTPS deep-link из Google Sheets.
+  // Способ открытия выбирается только в момент пользовательского клика.
+  btn.href=accessUrl;
   if(!isTelegramLink){
     btn.target="_blank";
     btn.rel="noopener";
@@ -523,16 +505,9 @@ function createItem(i){
 
   btn.textContent="Оформить доступ";
   btn.addEventListener("click",(e)=>{
-    // Статистика отправляется параллельно и никогда не блокирует переход.
+    // Статистика идет параллельно и не влияет на навигацию.
     trackClick(i.title).catch(err=>console.error("Не удалось записать клик",err));
 
-    if(isTelegramLink){
-      // Не вызываем preventDefault(): нативный href должен сработать
-      // непосредственно из пользовательского клика.
-      return;
-    }
-
-    // Для прочих ссылок сохраняем прежнюю WebApp/browser-логику.
     e.preventDefault();
     openAccessLink(accessUrl);
   });
