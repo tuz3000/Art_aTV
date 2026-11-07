@@ -2,466 +2,81 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Art_aTV Analytics PRO MAX</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Art_aTV · Админ-панель</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#08090c">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
-body{
-  margin:0;
-  background:#0b0b0f;
-  color:white;
-  font-family:Arial,sans-serif;
-}
-
-.header{
-  position:sticky;
-  top:0;
-  z-index:100;
-  background:#111;
-  padding:18px;
-  font-size:24px;
-  font-weight:900;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
-  gap:10px;
-  padding:10px;
-}
-
-.card{
-  background:#15151c;
-  border-radius:14px;
-  padding:16px;
-}
-
-.big{
-  font-size:30px;
-  font-weight:900;
-  color:#3aa0ff;
-}
-
-.label{
-  margin-top:6px;
-  color:#aaa;
-  font-size:13px;
-}
-
-.search{
-  width:calc(100% - 20px);
-  margin:10px;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  background:#1a1a1a;
-  color:white;
-  font-size:15px;
-}
-
-.section{
-  margin:10px;
-  background:#15151c;
-  border-radius:14px;
-  padding:16px;
-  overflow:auto;
-}
-
-.row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 0;
-  border-bottom:1px solid #222;
-}
-
-.rank{
-  width:45px;
-  color:#3aa0ff;
-  font-weight:700;
-}
-
-.title{
-  flex:1;
-  margin:0 10px;
-}
-
-.count{
-  font-weight:700;
-}
-
-.percent{
-  color:#aaa;
-  margin-left:8px;
-}
-
-.lasttime{
-  color:#888;
-  font-size:12px;
-  margin-top:3px;
-}
-
-button{
-  margin:8px 5px 8px 0;
-  padding:10px 12px;
-  border:none;
-  border-radius:10px;
-  background:#3aa0ff;
-  color:white;
-  font-weight:800;
-  cursor:pointer;
-}
-
-canvas{
-  max-height:460px;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:14px;
-}
-
-th,td{
-  padding:10px;
-  border-bottom:1px solid #222;
-  text-align:left;
-}
-
-.green{color:#4ade80}
-.yellow{color:#facc15}
-.red{color:#f87171}
+:root{--bg:#08090c;--panel:#111319;--panel2:#171a22;--text:#f5f6f8;--muted:#969ca8;--line:rgba(255,255,255,.08);--blue:#4ea1ff;--green:#53d28c;--gold:#f6c453;--red:#ff6b6b}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 20% -10%,rgba(78,161,255,.11),transparent 26%),radial-gradient(circle at 95% 0,rgba(246,196,83,.08),transparent 22%),var(--bg);color:var(--text);font-family:Arial,sans-serif}button,input,select{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+.topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(8,9,12,.92);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.brand-title{font-size:21px;font-weight:900}.brand-sub{margin-top:3px;color:var(--muted);font-size:11px}.status{display:flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.04);color:#cfd3da;font-size:12px}.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 14px rgba(83,210,140,.7)}
+.shell{max-width:1500px;margin:0 auto;padding:14px 14px 70px}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding:12px;border:1px solid var(--line);border-radius:16px;background:rgba(17,19,25,.8)}.periods,.controls{display:flex;gap:7px;flex-wrap:wrap}.period-btn,.tab-btn,.secondary{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:rgba(255,255,255,.045);color:#d6d8de;font-weight:800}.period-btn.active{background:var(--blue);color:#fff;border-color:transparent}.note{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:6px;overflow:auto;padding-bottom:12px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab-btn{flex:0 0 auto;border-radius:12px}.tab-btn.active{background:#fff;color:#111;border-color:#fff}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:10px;margin-bottom:12px}.kpi{min-height:114px;padding:15px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(150deg,rgba(255,255,255,.055),rgba(255,255,255,.025));box-shadow:0 16px 45px rgba(0,0,0,.22)}.value{font-size:28px;font-weight:900;letter-spacing:-.6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.blue{color:var(--blue)}.green{color:var(--green)}.gold{color:var(--gold)}.label{margin-top:7px;color:var(--muted);font-size:12px;line-height:1.35}.delta{margin-top:7px;color:#c4c7ce;font-size:11px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.panel{min-width:0;margin-bottom:12px;padding:16px;border:1px solid var(--line);border-radius:18px;background:rgba(17,19,25,.9);box-shadow:0 16px 45px rgba(0,0,0,.22)}.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.panel h2{margin:0;font-size:17px}.sub{margin-top:4px;color:var(--muted);font-size:11px}.chart{position:relative;height:320px}
+.search,.select{padding:11px 12px;border:1px solid var(--line);border-radius:12px;outline:none;background:#0d0f14;color:#fff}.search{min-width:220px;flex:1}.action{padding:10px 12px;border:none;border-radius:11px;background:var(--blue);color:#fff;font-weight:800}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}table{width:100%;border-collapse:collapse;font-size:13px}th{position:sticky;top:0;z-index:1;padding:11px 12px;background:#171a22;color:#aeb3be;text-align:left;white-space:nowrap}td{padding:11px 12px;border-top:1px solid var(--line);vertical-align:top}tr:hover td{background:rgba(255,255,255,.025)}.muted{color:var(--muted)}.mono{font-family:Consolas,monospace;font-size:11px}.good{color:var(--green)}.warn{color:var(--gold)}
+.rank-list{display:flex;flex-direction:column}.rank-row{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid var(--line)}.rank-row:last-child{border-bottom:none}.rank{font-weight:900;color:var(--blue)}.rank-name{font-weight:800;overflow-wrap:anywhere}.rank-meta{margin-top:4px;color:var(--muted);font-size:11px}.rank-count{text-align:right;font-weight:900}.rank-percent{margin-top:3px;color:var(--muted);font-size:10px}
+.insights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.insight{padding:13px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.035);color:#dce0e6;font-size:13px;line-height:1.45}.event{display:grid;grid-template-columns:135px 150px minmax(0,1fr) 160px;gap:10px;padding:10px;border-bottom:1px solid var(--line);font-size:12px}.event-type{font-weight:800}.empty{padding:24px;text-align:center;color:var(--muted)}.footer{padding:12px 2px;color:#666d79;font-size:11px;text-align:center}
+@media(max-width:1180px){.kpis{grid-template-columns:repeat(3,minmax(150px,1fr))}}@media(max-width:820px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(140px,1fr))}.event{grid-template-columns:100px minmax(0,1fr)}}@media(max-width:520px){.topbar{padding:12px}.brand-title{font-size:18px}.status span:last-child{display:none}.shell{padding:10px 10px 60px}.kpi{padding:12px;min-height:100px}.value{font-size:23px}.panel{padding:13px}.chart{height:270px}.insights{grid-template-columns:1fr}.controls{align-items:stretch}.search,.select,.action{width:100%;min-width:0}}
 </style>
 </head>
-
 <body>
-
-<div class="header">📊 Art_aTV Analytics PRO MAX</div>
-
-<div class="grid">
-  <div class="card"><div class="big" id="totalClicks">0</div><div class="label">🔥 Всего кликов доступа</div></div>
-  <div class="card"><div class="big" id="totalShows">0</div><div class="label">🎬 Сериалов с кликами</div></div>
-  <div class="card"><div class="big" id="avgClicks">0</div><div class="label">📈 Среднее на сериал</div></div>
-  <div class="card"><div class="big" id="leader">—</div><div class="label">🏆 Лидер</div></div>
-  <div class="card"><div class="big" id="usersCount">0</div><div class="label">👥 Пользователей</div></div>
-  <div class="card"><div class="big" id="visitsCount">0</div><div class="label">👁 Открытий каталога</div></div>
-  <div class="card"><div class="big" id="todayUsers">0</div><div class="label">🆕 Активных за 24 часа</div></div>
-  <div class="card"><div class="big" id="onlineCount">0</div><div class="label">🟢 Онлайн сейчас</div></div>
+<header class="topbar"><div><div class="brand-title">📊 Art_aTV · Админ-панель</div><div class="brand-sub">Аналитика существующих данных Firestore</div></div><div class="status"><span class="dot"></span><span id="sync">Подключение…</span></div></header>
+<div class="shell">
+<div class="toolbar"><div class="periods"><button class="period-btn" data-period="1">24 часа</button><button class="period-btn active" data-period="7">7 дней</button><button class="period-btn" data-period="30">30 дней</button><button class="period-btn" data-period="all">Всё время</button></div><div class="note" id="periodNote">Активность за последние 7 дней</div></div>
+<nav class="tabs"><button class="tab-btn active" data-tab="overview">Обзор</button><button class="tab-btn" data-tab="serials">Сериалы</button><button class="tab-btn" data-tab="users">Пользователи</button><button class="tab-btn" data-tab="events">События</button><button class="tab-btn" data-tab="exports">Экспорт</button></nav>
+<section id="tab-overview" class="page">
+<div class="kpis">
+<div class="kpi"><div class="value blue" id="visitsKpi">0</div><div class="label">👁 Открытий каталога</div><div class="delta" id="visitsDelta">—</div></div>
+<div class="kpi"><div class="value green" id="uniqueKpi">0</div><div class="label">👥 Уникальных посетителей</div><div class="delta" id="uniqueDelta">—</div></div>
+<div class="kpi"><div class="value" id="accessKpi">0</div><div class="label">💳 «Оформить доступ»</div><div class="delta" id="accessRate">—</div></div>
+<div class="kpi"><div class="value gold" id="onlineKpi">0</div><div class="label">🟢 Онлайн сейчас</div><div class="delta">активность ≤ 70 секунд</div></div>
+<div class="kpi"><div class="value" id="usersKpi">0</div><div class="label">👤 Всего пользователей</div><div class="delta" id="returningKpi">—</div></div>
+<div class="kpi"><div class="value" id="leaderKpi">—</div><div class="label">🏆 Лидер рейтинга</div><div class="delta" id="leaderCount">—</div></div>
 </div>
-
-<div class="section">
-  <button onclick="exportClicks()">Экспорт кликов CSV</button>
-  <button onclick="exportUsers()">Экспорт пользователей CSV</button>
+<div class="grid2"><div class="panel"><div class="panel-head"><div><h2>📈 Посещения</h2><div class="sub">Динамика открытий каталога</div></div></div><div class="chart"><canvas id="visitsChart"></canvas></div></div><div class="panel"><div class="panel-head"><div><h2>🎯 Воронка действий</h2><div class="sub">События за выбранный период</div></div></div><div class="chart"><canvas id="funnelChart"></canvas></div></div></div>
+<div class="grid2"><div class="panel"><div class="panel-head"><div><h2>🔥 TOP-10 сериалов</h2><div class="sub">Общий рейтинг clicks</div></div></div><div class="chart"><canvas id="topChart"></canvas></div></div><div class="panel"><div class="panel-head"><div><h2>🕒 Активность по часам</h2><div class="sub">Когда чаще открывают каталог</div></div></div><div class="chart"><canvas id="hoursChart"></canvas></div></div></div>
+<div class="panel"><div class="panel-head"><div><h2>💡 Авто-инсайты</h2><div class="sub">Автоматические расчёты, не AI-генерация</div></div></div><div class="insights" id="insights"></div></div>
+</section>
+<section id="tab-serials" class="page hidden"><div class="panel"><div class="panel-head"><div><h2>🔥 Полный рейтинг сериалов</h2><div class="sub">Накопленная статистика clicks</div></div><div class="controls"><input id="serialSearch" class="search" placeholder="Поиск сериала…"><select id="serialSort" class="select"><option value="count_desc">По кликам ↓</option><option value="count_asc">По кликам ↑</option><option value="title">По названию</option><option value="recent">По последнему клику</option></select></div></div><div id="serialsList" class="rank-list"></div></div></section>
+<section id="tab-users" class="page hidden"><div class="panel"><div class="panel-head"><div><h2>👥 Пользователи</h2><div class="sub">Поиск и фильтрация users</div></div><div class="controls"><input id="userSearch" class="search" placeholder="ID, username, имя…"><select id="userFilter" class="select"><option value="all">Все</option><option value="today">Активные 24ч</option><option value="week">Активные 7 дней</option><option value="returning">Повторные opens &gt; 1</option></select></div></div><div class="table-wrap"><table><thead><tr><th>Пользователь</th><th>ID</th><th>Источник</th><th>Открытий</th><th>Первый визит</th><th>Последний визит</th><th>Статус</th></tr></thead><tbody id="usersTable"></tbody></table></div></div></section>
+<section id="tab-events" class="page hidden"><div class="panel"><div class="panel-head"><div><h2>⚡ Последние события</h2><div class="sub">До 300 последних событий по текущему фильтру</div></div><div class="controls"><input id="eventSearch" class="search" placeholder="Сериал, тип, пользователь…"><select id="eventType" class="select"><option value="all">Все типы</option></select></div></div><div id="eventList"></div></div></section>
+<section id="tab-exports" class="page hidden"><div class="grid2"><div class="panel"><div class="panel-head"><div><h2>📥 Экспорт CSV</h2><div class="sub">Экспорт не меняет Firestore</div></div></div><div class="controls"><button class="action" onclick="exportClicks()">Рейтинг</button><button class="action" onclick="exportUsers()">Пользователи</button><button class="action" onclick="exportVisits()">Посещения</button><button class="action" onclick="exportEvents()">События</button></div></div><div class="panel"><div class="panel-head"><div><h2>🧾 Состояние данных</h2><div class="sub">Загруженные документы</div></div></div><div id="dataState" class="rank-list"></div></div></div></section>
+<div class="footer">Art_aTV Analytics · эта страница только читает существующие коллекции Firestore.</div>
 </div>
-
-<div class="section">
-<h2>📊 ТОП-20 сериалов</h2>
-<canvas id="chartClicks"></canvas>
-</div>
-
-<div class="section">
-<h2>📈 Посещения за 7 дней</h2>
-<canvas id="chartVisits"></canvas>
-</div>
-
-<div class="section">
-<h2>🥧 Типы событий</h2>
-<canvas id="chartEvents"></canvas>
-</div>
-
-<input class="search" id="search" placeholder="Поиск сериала...">
-
-<div class="section">
-<h2>🔥 Полный рейтинг сериалов</h2>
-<div id="list"></div>
-</div>
-
-<div class="section">
-<h2>👥 Последние пользователи</h2>
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Username</th>
-<th>Источник</th>
-<th>Открытий</th>
-<th>Последний визит</th>
-</tr>
-</thead>
-<tbody id="usersTable"></tbody>
-</table>
-</div>
-
-<div class="section">
-<h2>🧠 AI-инсайты</h2>
-<div id="ai"></div>
-</div>
-
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",
-  authDomain: "art-atv.firebaseapp.com",
-  projectId: "art-atv",
-  storageBucket: "art-atv.firebasestorage.app",
-  messagingSenderId: "549965698241",
-  appId: "1:549965698241:web:86cfa4dc6048d48d4ef040"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-let chartClicks, chartVisits, chartEvents;
-let clicksData=[], usersData=[], visitsData=[], eventsData=[], onlineData=[];
-
-function medal(index){
-  if(index===0) return "🥇";
-  if(index===1) return "🥈";
-  if(index===2) return "🥉";
-  return "#" + (index+1);
-}
-
-function formatDate(t){
-  return t ? new Date(t).toLocaleString("ru-RU") : "нет данных";
-}
-
-function status(time){
-  const diff = Date.now() - (time || 0);
-  if(diff < 86400000) return "🟢 сегодня";
-  if(diff < 604800000) return "🟡 7 дней";
-  return "🔴 давно";
-}
-
-function renderAll(){
-  renderClicks(clicksData);
-  renderUsers();
-  renderVisitsChart();
-  renderEventsChart();
-  renderAI();
-}
-
-function renderClicks(data){
-  let total=0;
-  data.forEach(i=>total += i.count || 0);
-
-  document.getElementById("totalClicks").innerText = total;
-  document.getElementById("totalShows").innerText = data.length;
-  document.getElementById("avgClicks").innerText = data.length ? (total/data.length).toFixed(1) : 0;
-  document.getElementById("leader").innerText = data.length ? data[0].title : "—";
-
-  const q=document.getElementById("search").value.toLowerCase();
-  const filtered=data.filter(item=>item.title.toLowerCase().includes(q));
-
-  document.getElementById("list").innerHTML=filtered.map((item,index)=>{
-    const percent = total ? ((item.count/total)*100).toFixed(1) : 0;
-
-    return `
-    <div class="row">
-      <div class="rank">${medal(index)}</div>
-      <div class="title">
-        ${item.title}
-        <div class="lasttime">Последний клик: ${formatDate(item.time)} · ${status(item.time)}</div>
-      </div>
-      <div class="count">${item.count}<span class="percent">${percent}%</span></div>
-    </div>`;
-  }).join("");
-
-  drawClicksChart(data);
-}
-
-function drawClicksChart(data){
-  const top=data.slice(0,20);
-
-  if(chartClicks) chartClicks.destroy();
-
-  chartClicks=new Chart(document.getElementById("chartClicks"),{
-    type:"bar",
-    data:{
-      labels:top.map(i=>i.title),
-      datasets:[{label:"Клики",data:top.map(i=>i.count)}]
-    },
-    options:{
-      responsive:true,
-      plugins:{legend:{labels:{color:"white"}}},
-      scales:{x:{ticks:{color:"white"}},y:{ticks:{color:"white"}}}
-    }
-  });
-}
-
-function renderUsers(){
-  document.getElementById("usersCount").innerText = usersData.length;
-  document.getElementById("visitsCount").innerText = visitsData.length;
-
-  const dayAgo = Date.now() - 86400000;
-  document.getElementById("todayUsers").innerText =
-    usersData.filter(u=>(u.last_visit||0)>dayAgo).length;
-
-  const now = Date.now();
-  document.getElementById("onlineCount").innerText =
-    onlineData.filter(u=>now-(u.last_seen||0)<70000).length;
-
-  const sorted=[...usersData].sort((a,b)=>(b.last_visit||0)-(a.last_visit||0)).slice(0,30);
-
-  document.getElementById("usersTable").innerHTML = sorted.map(u=>`
-    <tr>
-      <td>${u.id || ""}</td>
-      <td>${u.username ? "@"+u.username : u.first_name || "—"}</td>
-      <td>${u.source || "—"}</td>
-      <td>${u.opens || 0}</td>
-      <td>${formatDate(u.last_visit)}</td>
-    </tr>
-  `).join("");
-}
-
-function renderVisitsChart(){
-  const days=[];
-  for(let i=6;i>=0;i--){
-    const d=new Date();
-    d.setDate(d.getDate()-i);
-    const key=d.toLocaleDateString("ru-RU");
-    days.push(key);
-  }
-
-  const counts={};
-  days.forEach(d=>counts[d]=0);
-
-  visitsData.forEach(v=>{
-    const key=new Date(v.time||0).toLocaleDateString("ru-RU");
-    if(counts[key]!==undefined) counts[key]++;
-  });
-
-  if(chartVisits) chartVisits.destroy();
-
-  chartVisits=new Chart(document.getElementById("chartVisits"),{
-    type:"line",
-    data:{
-      labels:days,
-      datasets:[{label:"Открытия каталога",data:days.map(d=>counts[d]),tension:.35}]
-    },
-    options:{
-      responsive:true,
-      plugins:{legend:{labels:{color:"white"}}},
-      scales:{x:{ticks:{color:"white"}},y:{ticks:{color:"white"}}}
-    }
-  });
-}
-
-function renderEventsChart(){
-  const map={};
-
-  eventsData.forEach(e=>{
-    map[e.type || "unknown"] = (map[e.type || "unknown"] || 0) + 1;
-  });
-
-  if(chartEvents) chartEvents.destroy();
-
-  chartEvents=new Chart(document.getElementById("chartEvents"),{
-    type:"pie",
-    data:{
-      labels:Object.keys(map),
-      datasets:[{data:Object.values(map)}]
-    },
-    options:{
-      responsive:true,
-      plugins:{legend:{labels:{color:"white"}}}
-    }
-  });
-}
-
-function renderAI(){
-  const top=clicksData[0];
-  const weak=clicksData[clicksData.length-1];
-
-  const posterClicks=eventsData.filter(e=>e.type==="poster_open").length;
-  const kpClicks=eventsData.filter(e=>e.type==="kinopoisk_click").length;
-  const accessClicks=eventsData.filter(e=>e.type==="access_click").length;
-
-  const conversion = posterClicks ? ((kpClicks/posterClicks)*100).toFixed(1) : 0;
-
-  document.getElementById("ai").innerHTML = `
-    <p>🏆 Самый сильный сериал: <b>${top ? top.title : "—"}</b></p>
-    <p>📉 Самый слабый по кликам: <b>${weak ? weak.title : "—"}</b></p>
-    <p>🖼 Открытий постеров: <b>${posterClicks}</b></p>
-    <p>🎬 Переходов на Кинопоиск: <b>${kpClicks}</b></p>
-    <p>💳 Нажатий “Оформить доступ”: <b>${accessClicks}</b></p>
-    <p>📈 Конверсия постер → Кинопоиск: <b>${conversion}%</b></p>
-    <p>💡 Совет: продвигай первые 3 сериала из рейтинга и проверь постеры у слабых сериалов.</p>
-  `;
-}
-
-db.collection("clicks").onSnapshot(snapshot=>{
-  let arr=[];
-  snapshot.forEach(doc=>{
-    const d=doc.data();
-    arr.push({
-      title:d.title || "Без названия",
-      count:d.count || 0,
-      time:d.time || 0
-    });
-  });
-  arr.sort((a,b)=>(b.count||0)-(a.count||0));
-  clicksData=arr;
-  renderAll();
-});
-
-db.collection("users").onSnapshot(snapshot=>{
-  let arr=[];
-  snapshot.forEach(doc=>arr.push(doc.data()));
-  usersData=arr;
-  renderAll();
-});
-
-db.collection("visits").onSnapshot(snapshot=>{
-  let arr=[];
-  snapshot.forEach(doc=>arr.push(doc.data()));
-  visitsData=arr;
-  renderAll();
-});
-
-db.collection("events").onSnapshot(snapshot=>{
-  let arr=[];
-  snapshot.forEach(doc=>arr.push(doc.data()));
-  eventsData=arr;
-  renderAll();
-});
-
-db.collection("online").onSnapshot(snapshot=>{
-  let arr=[];
-  snapshot.forEach(doc=>arr.push(doc.data()));
-  onlineData=arr;
-  renderAll();
-});
-
-document.getElementById("search").addEventListener("input",()=>renderClicks(clicksData));
-
-function exportClicks(){
-  let csv="title,count,time\n";
-  clicksData.forEach(i=>{
-    csv += `"${i.title}",${i.count},"${formatDate(i.time)}"\n`;
-  });
-  downloadCSV(csv,"clicks.csv");
-}
-
-function exportUsers(){
-  let csv="id,username,first_name,source,opens,last_visit\n";
-  usersData.forEach(u=>{
-    csv += `"${u.id}","${u.username||""}","${u.first_name||""}","${u.source||""}",${u.opens||0},"${formatDate(u.last_visit)}"\n`;
-  });
-  downloadCSV(csv,"users.csv");
-}
-
-function downloadCSV(csv,name){
-  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;
-  a.download=name;
-  a.click();
-}
+const firebaseConfig={apiKey:"AIzaSyDAfq6Tiqr_l9A6LxKtrx-9_AtoWqyzUzo",authDomain:"art-atv.firebaseapp.com",projectId:"art-atv",storageBucket:"art-atv.firebasestorage.app",messagingSenderId:"549965698241",appId:"1:549965698241:web:86cfa4dc6048d48d4ef040"};
+firebase.initializeApp(firebaseConfig);const db=firebase.firestore();
+let clicksData=[],usersData=[],visitsData=[],eventsData=[],onlineData=[],period=7,loaded=new Set();let visitsChart,funnelChart,topChart,hoursChart;
+function ms(v){if(!v)return 0;if(typeof v==='number')return v;if(typeof v.toMillis==='function')return v.toMillis();if(typeof v.seconds==='number')return v.seconds*1000;const n=Number(v);return Number.isFinite(n)?n:0}
+function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+function fmt(v){return new Intl.NumberFormat('ru-RU').format(Number(v||0))}function date(v){const t=ms(v);return t?new Date(t).toLocaleString('ru-RU'):'—'}
+function start(){return period==='all'?0:Date.now()-Number(period)*86400000}function within(t){return period==='all'||ms(t)>=start()}function fVisits(){return visitsData.filter(v=>within(v.time))}function fEvents(){return eventsData.filter(e=>within(e.time))}function uniques(vs){return new Set(vs.map(v=>String(v.user_id||'')).filter(Boolean)).size}function countEvent(type,list=fEvents()){return list.filter(e=>e.type===type).length}
+function delta(cur,prev){if(!prev)return cur?'новый рост':'без изменений';const p=(cur-prev)/prev*100;return (p>0?'+':'')+p.toFixed(1)+'% к прошлому периоду'}
+function prevWindow(){if(period==='all')return null;const d=Number(period)*86400000,now=Date.now();return {a:now-d*2,b:now-d}}
+function chartOpts(){return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#cfd3da'}}},scales:{x:{ticks:{color:'#8e94a0'},grid:{color:'rgba(255,255,255,.05)'}},y:{beginAtZero:true,ticks:{color:'#8e94a0',precision:0},grid:{color:'rgba(255,255,255,.05)'}}}}}
+function render(){renderKpis();renderCharts();renderSerials();renderUsers();renderEvents();renderInsights();renderState();document.getElementById('sync').textContent=loaded.size<5?'Загрузка '+loaded.size+'/5':'Live · '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}
+function renderKpis(){const vs=fVisits(),es=fEvents(),u=uniques(vs),a=countEvent('access_click',es),on=onlineData.filter(x=>Date.now()-ms(x.last_seen)<70000).length,ret=usersData.filter(x=>Number(x.opens||0)>1).length,lead=clicksData[0];visitsKpi.textContent=fmt(vs.length);uniqueKpi.textContent=fmt(u);accessKpi.textContent=fmt(a);onlineKpi.textContent=fmt(on);usersKpi.textContent=fmt(usersData.length);leaderKpi.textContent=lead?lead.title:'—';leaderCount.textContent=lead?fmt(lead.count)+' кликов':'—';returningKpi.textContent=(usersData.length?ret/usersData.length*100:0).toFixed(1)+'% повторных';accessRate.textContent=(vs.length?a/vs.length*100:0).toFixed(1)+' на 100 открытий';const w=prevWindow();if(!w){visitsDelta.textContent='всё время';uniqueDelta.textContent='всё время'}else{const p=visitsData.filter(v=>{const t=ms(v.time);return t>=w.a&&t<w.b});visitsDelta.textContent=delta(vs.length,p.length);uniqueDelta.textContent=delta(u,uniques(p))}}
+function daily(){const vs=fVisits();let days=period==='all'?30:Number(period);if(period==='all'&&vs.length){const min=Math.min(...vs.map(v=>ms(v.time)).filter(Boolean));days=Math.min(90,Math.max(1,Math.ceil((Date.now()-min)/86400000)+1))}const labels=[],keys=[],m={};for(let i=days-1;i>=0;i--){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');keys.push(k);labels.push(d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}));m[k]=0}vs.forEach(v=>{const d=new Date(ms(v.time));const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');if(k in m)m[k]++});return{labels,values:keys.map(k=>m[k])}}
+function renderCharts(){const d=daily();if(visitsChart)visitsChart.destroy();visitsChart=new Chart(document.getElementById('visitsChart'),{type:'line',data:{labels:d.labels,datasets:[{label:'Открытия',data:d.values,borderColor:'#4ea1ff',backgroundColor:'rgba(78,161,255,.15)',fill:true,tension:.35,pointRadius:2}]},options:chartOpts()});const es=fEvents(),p=countEvent('poster_open',es),k=countEvent('kinopoisk_click',es),a=countEvent('access_click',es);if(funnelChart)funnelChart.destroy();funnelChart=new Chart(document.getElementById('funnelChart'),{type:'bar',data:{labels:['Постер','Кинопоиск','Оформить доступ'],datasets:[{label:'События',data:[p,k,a],backgroundColor:['rgba(78,161,255,.75)','rgba(246,196,83,.78)','rgba(83,210,140,.78)'],borderRadius:8}]},options:chartOpts()});const top=clicksData.slice(0,10);if(topChart)topChart.destroy();topChart=new Chart(document.getElementById('topChart'),{type:'bar',data:{labels:top.map(i=>i.title),datasets:[{label:'Клики',data:top.map(i=>i.count||0),backgroundColor:'rgba(78,161,255,.72)',borderRadius:7}]},options:{...chartOpts(),indexAxis:'y'}});const h=new Array(24).fill(0);fVisits().forEach(v=>{const t=ms(v.time);if(t)h[new Date(t).getHours()]++});if(hoursChart)hoursChart.destroy();hoursChart=new Chart(document.getElementById('hoursChart'),{type:'bar',data:{labels:h.map((_,i)=>String(i).padStart(2,'0')+':00'),datasets:[{label:'Открытия',data:h,backgroundColor:'rgba(246,196,83,.72)',borderRadius:5}]},options:chartOpts()})}
+function medal(i){return i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}
+function renderSerials(){const q=serialSearch.value.trim().toLowerCase(),s=serialSort.value;let a=clicksData.filter(i=>String(i.title||'').toLowerCase().includes(q));a=[...a].sort((x,y)=>s==='count_asc'?(x.count||0)-(y.count||0):s==='title'?String(x.title||'').localeCompare(String(y.title||''),'ru'):s==='recent'?ms(y.time)-ms(x.time):(y.count||0)-(x.count||0));const total=clicksData.reduce((z,i)=>z+Number(i.count||0),0);serialsList.innerHTML=a.length?a.map((i,n)=>`<div class="rank-row"><div class="rank">${medal(n)}</div><div><div class="rank-name">${esc(i.title||'Без названия')}</div><div class="rank-meta">Последний клик: ${esc(date(i.time))}</div></div><div class="rank-count">${fmt(i.count)}<div class="rank-percent">${(total?Number(i.count||0)/total*100:0).toFixed(1)}%</div></div></div>`).join(''):'<div class="empty">Ничего не найдено.</div>'}
+function userName(u){return u.username?'@'+u.username:[u.first_name,u.last_name].filter(Boolean).join(' ')||'—'}function userStatus(u){const d=Date.now()-ms(u.last_visit);return d<86400000?'<span class="good">● 24ч</span>':d<604800000?'<span class="warn">● 7 дней</span>':'<span class="muted">● давно</span>'}
+function renderUsers(){const q=userSearch.value.trim().toLowerCase(),f=userFilter.value;let a=usersData.filter(u=>{const hay=[u.id,u.username,u.first_name,u.last_name,u.source].join(' ').toLowerCase();if(q&&!hay.includes(q))return false;const d=Date.now()-ms(u.last_visit);if(f==='today'&&d>=86400000)return false;if(f==='week'&&d>=604800000)return false;if(f==='returning'&&Number(u.opens||0)<=1)return false;return true});a.sort((x,y)=>ms(y.last_visit)-ms(x.last_visit));usersTable.innerHTML=a.length?a.map(u=>`<tr><td><b>${esc(userName(u))}</b></td><td class="mono">${esc(u.id||'')}</td><td>${esc(u.source||'—')}</td><td>${fmt(u.opens)}</td><td>${esc(date(u.first_visit))}</td><td>${esc(date(u.last_visit))}</td><td>${userStatus(u)}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">Нет пользователей.</td></tr>'}
+function renderEvents(){const q=eventSearch.value.trim().toLowerCase(),selected=eventType.value,types=[...new Set(eventsData.map(e=>e.type||'unknown'))].sort();eventType.innerHTML='<option value="all">Все типы</option>'+types.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');if(types.includes(selected))eventType.value=selected;let a=[...eventsData].filter(e=>{if(selected!=='all'&&e.type!==selected)return false;return !q||[e.type,e.title,e.username,e.user_id,e.source].join(' ').toLowerCase().includes(q)}).sort((x,y)=>ms(y.time)-ms(x.time)).slice(0,300);eventList.innerHTML=a.length?a.map(e=>`<div class="event"><div>${esc(date(e.time))}</div><div class="event-type">${esc(e.type||'unknown')}</div><div>${esc(e.title||'—')}</div><div>${esc(e.username?'@'+e.username:e.user_id||'—')}</div></div>`).join(''):'<div class="empty">Нет событий.</div>'}
+function renderInsights(){const es=fEvents(),vs=fVisits(),p=countEvent('poster_open',es),k=countEvent('kinopoisk_click',es),a=countEvent('access_click',es),u=uniques(vs),lead=clicksData[0],ret=usersData.length?usersData.filter(x=>Number(x.opens||0)>1).length/usersData.length*100:0,h=new Array(24).fill(0);vs.forEach(v=>{const t=ms(v.time);if(t)h[new Date(t).getHours()]++});const max=Math.max(...h),peak=max>0?h.indexOf(max):null;const cards=[`🏆 Общий лидер: <b>${esc(lead?lead.title:'—')}</b>${lead?' — '+fmt(lead.count)+' кликов':''}.`,`👥 За период: <b>${fmt(u)}</b> уникальных посетителей и <b>${fmt(vs.length)}</b> открытий.`,`💳 «Оформить доступ»: <b>${fmt(a)}</b>, или <b>${(vs.length?a/vs.length*100:0).toFixed(1)}</b> на 100 открытий.`,`🖼 Постер → Кинопоиск: <b>${(p?k/p*100:0).toFixed(1)}%</b> (${fmt(k)} из ${fmt(p)}).`,`🔁 Повторные пользователи: <b>${ret.toFixed(1)}%</b>.`,peak===null?'🕒 Недостаточно данных по часам.':`🕒 Самый активный час: <b>${String(peak).padStart(2,'0')}:00</b>.`];insights.innerHTML=cards.map(x=>`<div class="insight">${x}</div>`).join('')}
+function renderState(){const rows=[['clicks',clicksData.length],['users',usersData.length],['visits',visitsData.length],['events',eventsData.length],['online',onlineData.length]];dataState.innerHTML=rows.map(r=>`<div class="rank-row"><div class="rank">•</div><div class="rank-name">${r[0]}</div><div class="rank-count">${fmt(r[1])}</div></div>`).join('')}
+function setPeriod(v){period=v==='all'?'all':Number(v);document.querySelectorAll('.period-btn').forEach(b=>b.classList.toggle('active',b.dataset.period===String(v)));periodNote.textContent=period==='all'?'Активность за всё время':period===1?'Активность за последние 24 часа':'Активность за последние '+period+' дней';render()}
+function setTab(v){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===v));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('hidden',p.id!=='tab-'+v))}
+function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"'}function download(rows,name){const csv='\uFEFF'+rows.map(r=>r.map(csvCell).join(',')).join('\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function exportClicks(){download([['title','count','time'],...clicksData.map(i=>[i.title,i.count,date(i.time)])],'art_atv_clicks.csv')}function exportUsers(){download([['id','username','first_name','last_name','source','opens','first_visit','last_visit'],...usersData.map(u=>[u.id,u.username,u.first_name,u.last_name,u.source,u.opens,date(u.first_visit),date(u.last_visit)])],'art_atv_users.csv')}function exportVisits(){download([['user_id','username','source','time','page'],...visitsData.map(v=>[v.user_id,v.username,v.source,date(v.time),v.page])],'art_atv_visits.csv')}function exportEvents(){download([['type','title','user_id','username','source','time','counted_in_top'],...eventsData.map(e=>[e.type,e.title,e.user_id,e.username,e.source,date(e.time),e.counted_in_top])],'art_atv_events.csv')}
+function sub(name,fn){db.collection(name).onSnapshot(s=>{const a=[];s.forEach(d=>a.push({...d.data(),_id:d.id}));fn(a);loaded.add(name);render()},e=>{console.error(name,e);sync.textContent='Ошибка '+name})}
+sub('clicks',a=>{a.sort((x,y)=>(y.count||0)-(x.count||0));clicksData=a});sub('users',a=>usersData=a);sub('visits',a=>visitsData=a);sub('events',a=>eventsData=a);sub('online',a=>onlineData=a);
+document.querySelectorAll('.period-btn').forEach(b=>b.addEventListener('click',()=>setPeriod(b.dataset.period)));document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));serialSearch.addEventListener('input',renderSerials);serialSort.addEventListener('change',renderSerials);userSearch.addEventListener('input',renderUsers);userFilter.addEventListener('change',renderUsers);eventSearch.addEventListener('input',renderEvents);eventType.addEventListener('change',renderEvents);setInterval(()=>{if(loaded.size===5){sync.textContent='Live · '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});renderKpis()}},30000);
 </script>
-
 </body>
 </html>
